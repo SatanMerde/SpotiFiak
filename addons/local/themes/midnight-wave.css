@@ -1,0 +1,51 @@
+/* Midnight Wave Theme for SpotiFiak */
+:root {
+  --sf-bg-primary: #0a0a2e;
+  --sf-bg-secondary: #12123a;
+  --sf-bg-tertiary: #1a1a4e;
+  --sf-accent: #00d4ff;
+  --sf-accent-glow: rgba(0, 212, 255, 0.3);
+  --sf-text-primary: #e8e8ff;
+  --sf-text-secondary: #8888cc;
+}
+
+/* Override Spotify colors */
+body, .Root__top-container {
+  background: linear-gradient(135deg, var(--sf-bg-primary) 0%, var(--sf-bg-secondary) 50%, #0d0d35 100%) !important;
+}
+
+.now-playing-bar {
+  background: linear-gradient(180deg, transparent, var(--sf-bg-primary)) !important;
+  border-top: 1px solid var(--sf-accent-glow) !important;
+}
+
+.progress-bar__fg {
+  background: linear-gradient(90deg, var(--sf-accent), #00ff88) !important;
+  box-shadow: 0 0 10px var(--sf-accent-glow) !important;
+}
+
+button[data-testid="control-button-shuffle"],
+button[data-testid="control-button-repeat"],
+button[data-testid="control-button-playpause"] {
+  color: var(--sf-accent) !important;
+  transition: all 0.3s ease !important;
+}
+
+button[data-testid="control-button-playpause"]:hover {
+  filter: drop-shadow(0 0 8px var(--sf-accent)) !important;
+  transform: scale(1.1) !important;
+}
+
+.nav-bar {
+  background: var(--sf-bg-secondary) !important;
+  border-right: 1px solid rgba(0, 212, 255, 0.1) !important;
+}
+
+a, .main-navBar-navBarLink {
+  color: var(--sf-text-secondary) !important;
+  transition: color 0.3s ease !important;
+}
+
+a:hover, .main-navBar-navBarLink:hover {
+  color: var(--sf-accent) !important;
+}

@@ -1,0 +1,24 @@
+{
+  "name": "spotifiak",
+  "version": "1.0.0",
+  "description": "🎵 SpotiFiak — Spicetify for mobile. A customizable Spotify Web Player wrapper with addon marketplace, theme injection, and Spicetify extension compatibility.",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "spotify",
+    "spicetify",
+    "mobile",
+    "addons",
+    "themes",
+    "marketplace"
+  ],
+  "author": "SatanMerde",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
