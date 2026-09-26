@@ -3,3 +3,13 @@ node_modules/
 .DS_Store
 *.log
 dist/
+
+# Android & Gradle
+.gradle/
+build/
+android/build/
+android/app/build/
+*.apk
+*.aab
+local.properties
+.cxx/

@@ -1,19 +1,23 @@
 {
   "name": "spotifiak",
   "version": "1.0.0",
-  "description": "🎵 SpotiFiak — Spicetify for mobile. A customizable Spotify Web Player wrapper with addon marketplace, theme injection, and Spicetify extension compatibility.",
+  "description": "🎵 SpotiFiak — Spicetify pour mobile. App Android WebView qui wrappe Spotify Web Player avec injection d'addons, thèmes et extensions communautaires. Inspiré de SpotiDuck.",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:android": "echo Use the android/ project to build the APK with Android Studio or Gradle"
   },
   "keywords": [
     "spotify",
     "spicetify",
     "mobile",
+    "android",
+    "webview",
     "addons",
     "themes",
-    "marketplace"
+    "marketplace",
+    "spotiduck"
   ],
   "author": "SatanMerde",
   "license": "MIT",

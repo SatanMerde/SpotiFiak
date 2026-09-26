@@ -1,160 +1,151 @@
-# 🎵 SpotiFiak — Spicetify for Mobile
+# 🎵 SpotiFiak — Spicetify pour Mobile
 
 <p align="center">
   <img src="public/favicon.svg" width="120" alt="SpotiFiak Logo">
 </p>
 
 <p align="center">
-  <strong>Personnalisez Spotify Web Player avec des thèmes, extensions et addons communautaires — directement depuis votre téléphone.</strong>
+  <strong>L'expérience Spicetify adaptée pour téléphone : personnalisez Spotify Web Player avec des addons, thèmes et extensions communautaires. Inspiré de l'architecture native de SpotiDuck.</strong>
 </p>
 
 <p align="center">
-  <a href="#installation">Installation</a> •
-  <a href="#fonctionnalités">Fonctionnalités</a> •
-  <a href="#marketplace">Marketplace</a> •
-  <a href="#créer-un-addon">Créer un Addon</a> •
-  <a href="#compatibilité-spicetify">Compatibilité Spicetify</a>
+  <a href="#-architecture-façon-spotiduck">Architecture</a> •
+  <a href="#-téléchargement-et-installation-de-lapk">Télécharger l'APK</a> •
+  <a href="#-marketplace--addons">Marketplace</a> •
+  <a href="#-compatibilité-spicetify-pc">Compatibilité Spicetify</a> •
+  <a href="#-compilation-de-lapk-avec-gradle">Compilation</a>
 </p>
 
 ---
 
-## ✨ Fonctionnalités
+## 📱 Architecture façon SpotiDuck
 
-- 🎧 **Lecteur Web Spotify** — Le Spotify Web Player intégré, optimisé pour mobile
-- 🎨 **Thèmes** — Changez complètement l'apparence de Spotify (Midnight Wave, Aurora Borealis, Retro Synthwave...)
-- 🧩 **Extensions** — Ajoutez des fonctionnalités (Lyrics+, Visualizer, Ad Skipper, Sleep Timer...)
-- 📱 **Custom Apps** — Applications complètes intégrées (Stats Dashboard, Queue Manager+...)
-- 🏪 **Marketplace** — Découvrez et installez des addons communautaires
-- 🔗 **Compatibilité Spicetify** — Les extensions PC Spicetify peuvent tourner sur SpotiFiak
-- 📦 **PWA** — Installable sur votre téléphone comme une vraie app
+Tout comme **[SpotiDuck](https://github.com/23fpsz/SpotiDuck-Releases)**, SpotiFiak fonctionne comme un **wrapper natif Android WebView** hautement optimisé autour du Spotify Web Player officiel (`open.spotify.com`) :
 
-## 🚀 Installation
+1. **WebView Container Haute Performance** :
+   - Fait tourner Spotify Web Player en injectant un User-Agent Desktop optimisé tactile.
+   - Contourne les limitations et restrictions mobiles habituelles.
+2. **Injection Dynamique de Code (JS & CSS)** :
+   - Injection au runtime des thèmes CSS et extensions JS sans modifier le binaire Spotify.
+   - Interface flottante (FAB) injectée dans la page avec accès au Marketplace et aux réglages.
+3. **Contrôles Système Natifs (MediaSession & Lock Screen)** :
+   - Prise en charge des boutons média de l'écran de verrouillage Android (Play, Pause, Suivant, Précédent).
+   - Affichage en direct du titre, artiste et pochette dans les notifications système.
+4. **Lecture en Arrière-Plan Continue** :
+   - Service d'avant-plan Android (`PlaybackService`) pour empêcher le système de suspendre la musique lorsque l'écran est éteint.
 
-### Prérequis
-- [Node.js](https://nodejs.org/) v18+
+```mermaid
+graph TD
+    A[App Android Native SpotiFiak] --> B[Android WebView]
+    B --> C[Spotify Web Player - open.spotify.com]
+    A --> D[PlaybackService - Arrière-Plan]
+    A --> E[MediaSession - Écran de Verrouillage]
+    B --> F[spotifiak-api.js - Compat Spicetify]
+    B --> G[spotifiak-overlay.js - Marketplace UI]
+    B --> H[addon-loader.js - Moteur d'injection]
+    B --> I[playback-monitor.js - Sync Titres/Audio]
+```
 
-### Lancer en local
+---
 
+## 📥 Téléchargement et Installation de l'APK
+
+### Méthode 1 : Via GitHub Actions (Recommandé)
+Chaque commit ou release sur le repository déclenche automatiquement la compilation de l'APK via **GitHub Actions** :
+
+1. Allez sur l'onglet **[Actions](https://github.com/SatanMerde/SpotiFiak/actions)** du dépôt.
+2. Cliquez sur le dernier workflow exécuté (`Build SpotiFiak Android APK`).
+3. Téléchargez l'artifact **`SpotiFiak-Release-APK`** ou **`SpotiFiak-Debug-APK`**.
+4. Installez le fichier `.apk` sur votre téléphone Android (activez l'autorisation pour les sources inconnues si nécessaire).
+
+### Méthode 2 : Version PWA Web
+Pour tester immédiatement dans le navigateur :
 ```bash
 git clone https://github.com/SatanMerde/SpotiFiak.git
 cd SpotiFiak
 npm install
 npm run dev
+# Ouvrir http://localhost:3000
 ```
 
-Ouvrez http://localhost:3000 dans votre navigateur.
+---
 
-### Installer sur téléphone
+## 🏪 Marketplace & Addons
 
-1. Ouvrez SpotiFiak dans Chrome/Safari sur votre téléphone
-2. Appuyez sur "Ajouter à l'écran d'accueil"
-3. SpotiFiak est maintenant installé comme une app !
+Le Marketplace intégré permet d'installer en un clic :
 
-## 🏪 Marketplace
+| Catégorie | Description | Addons inclus par défaut |
+|-----------|-------------|--------------------------|
+| 🎨 **Thèmes** | Personnalisation visuelle complète | Midnight Wave, Aurora Borealis, Retro Synthwave |
+| 🧩 **Extensions** | Ajout de fonctionnalités | Lyrics+, Audio Visualizer, Ad Skipper, Sleep Timer, Equalizer Pro |
+| 📱 **Apps** | Interfaces enrichies | Stats Dashboard, Queue Manager+ |
 
-Le Marketplace propose 3 types d'addons :
+---
 
-| Type | Description | Exemple |
-|------|-------------|---------|
-| 🎨 **Thèmes** | Changent l'apparence de Spotify | Midnight Wave, Aurora Borealis |
-| 🧩 **Extensions** | Ajoutent des fonctionnalités | Lyrics+, Audio Visualizer |
-| 📱 **Apps** | Applications complètes | Stats Dashboard, Queue Manager+ |
+## 🔗 Compatibilité Spicetify PC
 
-### Installer un addon
-1. Allez dans l'onglet **Marketplace**
-2. Parcourez ou recherchez un addon
-3. Cliquez sur **Installer**
-4. L'addon est actif immédiatement !
+SpotiFiak fournit une couche d'émulation pour `window.Spicetify` :
 
-## 🔧 Créer un Addon
+- `Spicetify.Player` : Contrôle de lecture (lecture, pause, piste suivante, volume).
+- `Spicetify.CosmosAsync` : Requêtes asynchrones vers l'écosystème Spotify.
+- `Spicetify.LocalStorage` : Stockage persistant des réglages d'addons.
+- `Spicetify.PopupModal` & `Spicetify.showNotification` : Système de dialogues et notifications.
+- `Spicetify.Topbar` & `Spicetify.ContextMenu` : Intégration de boutons et menus personnalisés.
 
-### Thème (CSS)
+Les extensions conçues pour la version PC de Spicetify s'exécutant sur le Web Player peuvent ainsi être activées directement sur votre téléphone.
 
-```css
-/* mon-theme.css */
-:root {
-  --sf-bg-primary: #1a1a2e;
-  --sf-accent: #e94560;
-}
+---
 
-body, .Root__top-container {
-  background: var(--sf-bg-primary) !important;
-}
+## 🛠️ Compilation de l'APK avec Gradle
+
+Si vous souhaitez compiler l'APK sur votre machine (avec JDK 17 et Android SDK) :
+
+```bash
+cd android
+./gradlew assembleDebug      # Pour l'APK Debug
+./gradlew assembleRelease    # Pour l'APK Release
 ```
+L'APK généré se trouvera dans `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-### Extension (JavaScript)
+---
 
-```javascript
-// mon-extension.js
-(function MonExtension() {
-  const SpotiFiak = window.SpotiFiak;
-  if (!SpotiFiak) return;
-
-  SpotiFiak.registerExtension({
-    id: 'ext-mon-extension',
-    name: 'Mon Extension',
-    version: '1.0.0',
-
-    onEnable() {
-      console.log('Extension activée !');
-      SpotiFiak.showNotification('Hello', 'Mon extension fonctionne !', 'success');
-    },
-
-    onDisable() {
-      console.log('Extension désactivée');
-    }
-  });
-})();
-```
-
-### Soumettre au Marketplace
-
-1. Créez un repo GitHub avec votre addon
-2. Ajoutez le fichier dans `addons/local/`
-3. Mettez à jour `addons/registry.json`
-4. Envoyez une Pull Request !
-
-## 🔗 Compatibilité Spicetify
-
-SpotiFiak émule l'API Spicetify pour permettre aux extensions PC de fonctionner :
-
-| API Spicetify | Support |
-|---------------|---------|
-| `Spicetify.Player` | ✅ Émulé |
-| `Spicetify.CosmosAsync` | ✅ Émulé |
-| `Spicetify.LocalStorage` | ✅ Natif |
-| `Spicetify.Topbar` | ✅ Émulé |
-| `Spicetify.PopupModal` | ✅ Émulé |
-| `Spicetify.ContextMenu` | ✅ Émulé |
-| `Spicetify.Platform` | ⚡ Partiel |
-| `Spicetify.URI` | ✅ Émulé |
-
-## 📁 Structure du Projet
+## 📁 Organisation du Projet
 
 ```
 SpotiFiak/
-├── server.js              # Serveur Express
-├── package.json
-├── public/
-│   ├── index.html         # App principale (PWA)
-│   ├── manifest.json      # Manifest PWA
-│   ├── favicon.svg
-│   ├── css/
-│   │   └── index.css      # Design system
-│   └── js/
-│       ├── spotifiak-api.js   # API SpotiFiak + Spicetify compat
-│       └── app.js             # Logique de l'application
+├── .github/
+│   └── workflows/
+│       └── build-apk.yml          # CI/CD compilation automatique de l'APK
+├── android/
+│   ├── app/
+│   │   ├── src/main/
+│   │   │   ├── AndroidManifest.xml
+│   │   │   ├── java/com/spotifiak/app/
+│   │   │   │   ├── MainActivity.java      # WebView + JS Bridge + MediaSession
+│   │   │   │   └── PlaybackService.java   # Maintien lecture en arrière-plan
+│   │   │   ├── assets/                    # Scripts & styles injectés
+│   │   │   │   ├── js/spotifiak-api.js
+│   │   │   │   ├── js/spotifiak-overlay.js
+│   │   │   │   ├── js/addon-loader.js
+│   │   │   │   ├── js/playback-monitor.js
+│   │   │   │   └── css/mobile-fixes.css
+│   │   │   └── res/                       # Icônes adaptatives, styles, sécurité
+│   │   └── build.gradle
+│   ├── gradlew / gradlew.bat
+│   └── settings.gradle
 ├── addons/
-│   ├── registry.json      # Registre des addons
-│   └── local/
-│       ├── themes/        # Thèmes CSS
-│       ├── extensions/    # Extensions JS
-│       └── apps/          # Custom Apps
+│   ├── registry.json                      # Catalogue des addons disponibles
+│   └── local/                             # Fichiers sources des addons
+├── public/                                # Interface PWA de test
+├── server.js                              # Serveur Express compagnon
+└── package.json
 ```
 
-## ⚠️ Avertissement
+---
 
-Ce projet n'est **pas affilié** à Spotify AB. Utilisez-le à vos propres risques. SpotiFiak est un projet éducatif et open-source.
+## ⚠️ Avertissement Légal
+
+Ce projet est un outil éducatif open-source non officiel. Il n'est en aucun cas affilié, sponsorisé ni approuvé par Spotify AB.
 
 ## 📄 Licence
 

@@ -1,0 +1,45 @@
+/* Retro Synthwave Theme for SpotiFiak */
+:root {
+  --sf-bg-dark: #1a0030;
+  --sf-bg-mid: #2d1050;
+  --sf-neon-pink: #ff00ff;
+  --sf-neon-cyan: #00ffff;
+  --sf-neon-orange: #ff6600;
+  --sf-sunset: linear-gradient(180deg, #ff006680, #ff660040, transparent);
+}
+
+body, .Root__top-container {
+  background: linear-gradient(180deg, var(--sf-bg-dark) 0%, var(--sf-bg-mid) 40%, #3d1070 70%, var(--sf-bg-dark) 100%) !important;
+}
+
+/* Grid lines effect */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40vh;
+  background: 
+    linear-gradient(90deg, rgba(255,0,255,0.1) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,0,255,0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  transform: perspective(500px) rotateX(60deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.progress-bar__fg {
+  background: linear-gradient(90deg, var(--sf-neon-pink), var(--sf-neon-cyan)) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.5) !important;
+}
+
+.now-playing-bar {
+  background: rgba(26, 0, 48, 0.95) !important;
+  border-top: 2px solid var(--sf-neon-pink) !important;
+  box-shadow: 0 -5px 30px rgba(255, 0, 255, 0.2) !important;
+}
+
+a, button {
+  text-shadow: 0 0 5px rgba(255, 0, 255, 0.3) !important;
+}
