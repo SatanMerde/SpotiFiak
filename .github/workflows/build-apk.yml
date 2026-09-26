@@ -41,20 +41,8 @@ jobs:
       - name: Build Debug APK with Gradle
         run: |
           set -o pipefail
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee gradle_output.txt
+          ./gradlew assembleDebug --stacktrace
         working-directory: android
-
-      - name: Push Build Log to Branch on Failure
-        if: failure()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout --orphan build-log
-          git rm -rf .
-          cp android/gradle_output.txt ./build_error.log
-          git add build_error.log
-          git commit -m "build error log"
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" build-log --force
 
       - name: Prepare APK for Release
         run: |
@@ -89,3 +77,13 @@ jobs:
           files: release-files/SpotiFiak.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Temporary Issues and Branches
+        if: success()
+        run: |
+          gh issue close 1 --comment "Build réussi !" || true
+          gh issue close 2 --comment "Build réussi !" || true
+          gh issue close 3 --comment "Build réussi !" || true
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" --delete build-log || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -168,9 +168,10 @@ public class MainActivity extends Activity {
         // Chrome client for fullscreen video, console logs etc.
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
-            public void onConsoleMessage(android.webkit.ConsoleMessage msg) {
+            public boolean onConsoleMessage(android.webkit.ConsoleMessage msg) {
                 // Forward console messages for debugging
                 android.util.Log.d("SpotiFiak", msg.message());
+                return true;
             }
         });
 
