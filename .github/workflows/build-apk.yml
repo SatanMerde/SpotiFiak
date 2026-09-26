@@ -95,3 +95,11 @@ jobs:
           files: release-files/SpotiFiak.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Close Error Issues on Success
+        if: success()
+        run: |
+          gh issue close 1 --comment "Build réussi !" || true
+          gh issue close 2 --comment "Build réussi !" || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
