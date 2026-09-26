@@ -26,18 +26,25 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Accept Android SDK Licenses
+        run: yes | sdkmanager --licenses || true
+
       - name: Make Gradle Wrapper Executable
         run: chmod +x android/gradlew
 
       - name: Build Debug APK with Gradle
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          ./gradlew assembleDebug --stacktrace --info
         working-directory: android
 
       - name: Prepare APK for Release
         run: |
           mkdir -p release-files
           cp android/app/build/outputs/apk/debug/app-debug.apk release-files/SpotiFiak.apk
-          ls -la release-files/
+          ls -lh release-files/
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
