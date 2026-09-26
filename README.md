@@ -15,6 +15,12 @@
   <img src="https://img.shields.io/badge/📥_TÉLÉCHARGER_L'APK-SpotiFiak_v1.0.0-1DB954?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Télécharger SpotiFiak APK" />
 </a>
 
+<br/><br/>
+
+<img src="docs/assets/banner.png" alt="SpotiFiak Mobile Showcase" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
+
+<br/>
+
 <p align="center">
   <a href="#-présentation">Présentation</a> •
   <a href="#-architecture-façon-spotiduck">Architecture</a> •
