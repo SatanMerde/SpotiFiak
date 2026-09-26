@@ -4,24 +4,24 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Spotify Green Circle -->
+    <!-- Spotify Green Circle using standard cubic beziers -->
     <path
         android:fillColor="#1DB954"
-        android:pathData="M54,20 A34,34 0 1,1 53.9,20 Z" />
+        android:pathData="M54,16C33.01,16 16,33.01 16,54C16,74.99 33.01,92 54,92C74.99,92 92,74.99 92,54C92,33.01 74.99,16 54,16Z" />
     <!-- White Sound Waves -->
     <path
         android:strokeColor="#FFFFFF"
         android:strokeWidth="4"
         android:strokeLineCap="round"
-        android:pathData="M38,44 C46,40 62,40 70,44" />
+        android:pathData="M38,44C46,40 62,40 70,44" />
     <path
         android:strokeColor="#FFFFFF"
         android:strokeWidth="3.5"
         android:strokeLineCap="round"
-        android:pathData="M40,53 C47,50 61,50 68,53" />
+        android:pathData="M40,53C47,50 61,50 68,53" />
     <path
         android:strokeColor="#FFFFFF"
         android:strokeWidth="3"
         android:strokeLineCap="round"
-        android:pathData="M43,62 C49,60 59,60 65,62" />
+        android:pathData="M43,62C49,60 59,60 65,62" />
 </vector>

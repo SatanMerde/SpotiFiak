@@ -37,8 +37,17 @@ jobs:
 
       - name: Build Debug APK with Gradle
         run: |
-          ./gradlew assembleDebug --stacktrace --info
+          set -o pipefail
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee gradle_output.txt
         working-directory: android
+
+      - name: Report Build Error on Failure
+        if: failure()
+        run: |
+          echo "## ❌ Gradle Build Failed" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          tail -n 80 android/gradle_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Prepare APK for Release
         run: |
