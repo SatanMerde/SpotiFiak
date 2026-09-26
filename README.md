@@ -9,6 +9,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/SatanMerde/SpotiFiak/releases/download/v1.0.0/SpotiFiak.apk">
+    <img src="https://img.shields.io/badge/Télécharger-SpotiFiak.apk%20(v1.0.0)-1DB954?style=for-the-badge&logo=android&logoColor=white" alt="Télécharger SpotiFiak APK" />
+  </a>
+</p>
+
+<p align="center">
   <a href="#-architecture-façon-spotiduck">Architecture</a> •
   <a href="#-téléchargement-et-installation-de-lapk">Télécharger l'APK</a> •
   <a href="#-marketplace--addons">Marketplace</a> •
