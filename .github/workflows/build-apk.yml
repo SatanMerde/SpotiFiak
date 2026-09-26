@@ -29,6 +29,8 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
 
       - name: Accept Android SDK Licenses
         run: yes | sdkmanager --licenses || true
@@ -49,14 +51,14 @@ jobs:
           name: gradle-build-log
           path: android/gradle_output.txt
 
-      - name: Create Issue with Build Error on Failure
+      - name: Report Build Error on Failure
         if: failure()
         run: |
-          echo "### ❌ Build Error Log" > /tmp/issue_body.md
+          echo "### ❌ What Went Wrong:" > /tmp/issue_body.md
           echo '```text' >> /tmp/issue_body.md
-          tail -n 120 android/gradle_output.txt >> /tmp/issue_body.md
+          grep -B 3 -A 40 "* What went wrong:" android/gradle_output.txt >> /tmp/issue_body.md || grep -B 3 -A 40 "FAILURE:" android/gradle_output.txt >> /tmp/issue_body.md || tail -n 50 android/gradle_output.txt >> /tmp/issue_body.md
           echo '```' >> /tmp/issue_body.md
-          gh issue create --title "CI Build Failure Log" --body-file /tmp/issue_body.md || true
+          gh issue create --title "Build Error Details" --body-file /tmp/issue_body.md || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
