@@ -5,7 +5,10 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -23,32 +26,43 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Make Gradle Wrapper Executable
         run: chmod +x android/gradlew
-        working-directory: android
 
-      - name: Build Debug APK
+      - name: Build Debug APK with Gradle
         run: ./gradlew assembleDebug --stacktrace
         working-directory: android
+
+      - name: Prepare APK for Release
+        run: |
+          mkdir -p release-files
+          cp android/app/build/outputs/apk/debug/app-debug.apk release-files/SpotiFiak.apk
+          ls -la release-files/
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SpotiFiak-Debug-APK
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: SpotiFiak-APK
+          path: release-files/SpotiFiak.apk
           retention-days: 30
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace
-        working-directory: android
-        continue-on-error: true
-
-      - name: Upload Release APK Artifact
-        uses: actions/upload-artifact@v4
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
         with:
-          name: SpotiFiak-Release-APK
-          path: android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
+          tag_name: v1.0.0
+          name: "SpotiFiak v1.0.0 — Android APK"
+          body: |
+            ## 🎵 SpotiFiak Mobile APK (Style SpotiDuck)
+
+            Téléchargez **`SpotiFiak.apk`** ci-dessous et installez-le directement sur votre téléphone Android !
+
+            ### ✨ Fonctionnalités :
+            - 🎧 **Spotify Web Player** intégré avec affichage optimisé mobile
+            - 🏪 **Marketplace** avec 10 addons pré-installés (thèmes, extensions, apps)
+            - 🔗 **Compatibilité Spicetify PC** (émulation de l'API Spicetify)
+            - ⏯️ **Contrôles écran de verrouillage** (MediaSession) & lecture en arrière-plan sans coupure
+            - 🚫 **Ad Skipper** et **Lyrics+** inclus
+          files: release-files/SpotiFiak.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
