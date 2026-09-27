@@ -942,7 +942,22 @@
         const strUrl = typeof url === 'string' ? url : (url && url.url ? url.url : '');
         if (strUrl && (strUrl.includes('connect-state') || strUrl.includes('melody/v1/msg'))) {
             try {
-                const reqHeaders = opts?.headers || {};
+                let reqHeaders = {};
+                if (opts?.headers) {
+                    if (typeof opts.headers.forEach === 'function') {
+                        opts.headers.forEach((v, k) => { reqHeaders[k] = v; });
+                    } else if (Array.isArray(opts.headers)) {
+                        opts.headers.forEach(([k, v]) => { reqHeaders[k] = v; });
+                    } else if (typeof opts.headers === 'object') {
+                        Object.assign(reqHeaders, opts.headers);
+                    }
+                }
+                if (!reqHeaders['Authorization'] && !reqHeaders['authorization'] && window.spotAuthToken) {
+                    reqHeaders['Authorization'] = window.spotAuthToken;
+                }
+                if (!reqHeaders['Client-Token'] && !reqHeaders['client-token'] && window.spotCliToken) {
+                    reqHeaders['Client-Token'] = window.spotCliToken;
+                }
                 const reqBody = opts?.body ? (typeof opts.body === 'string' ? opts.body : JSON.stringify(opts.body)) : null;
                 const rawRes = AndBridge.nativeFetch(strUrl, method, JSON.stringify(reqHeaders), reqBody);
                 if (rawRes) {
@@ -957,7 +972,18 @@
                         url: strUrl,
                         json: async () => JSON.parse(resBody || '{}'),
                         text: async () => resBody,
-                        arrayBuffer: async () => new TextEncoder().encode(resBody).buffer,
+                        arrayBuffer: async () => {
+                            if (parsed.isBinary) {
+                                const binStr = atob(resBody);
+                                const len = binStr.length;
+                                const bytes = new Uint8Array(len);
+                                for (let i = 0; i < len; i++) {
+                                    bytes[i] = binStr.charCodeAt(i);
+                                }
+                                return bytes.buffer;
+                            }
+                            return new TextEncoder().encode(resBody).buffer;
+                        },
                         clone: function() { return this; }
                     };
                 }

@@ -38,15 +38,23 @@ import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import android.util.Base64;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -275,25 +283,53 @@ public class MainActivity extends Activity {
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 String host = uri.getHost();
+                String url = uri.toString();
 
-                // 1. Block ad domains from adblock_hosts.txt
-                if (host != null && adHosts.contains(host.toLowerCase(Locale.ROOT))) {
-                    return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(new byte[0]));
+                // 1. Block ad domains from adblock_hosts.txt and known ad domains
+                if (host != null && (adHosts.contains(host.toLowerCase(Locale.ROOT)) ||
+                    host.contains("doubleclick.net") || host.contains("googlesyndication.com") ||
+                    host.contains("2mdn.net") || host.contains("adstudio-assets.scdn.co") ||
+                    host.contains("adxcel.com"))) {
+                    return new WebResourceResponse("text/plain", "utf-8", 200, "OK", Collections.emptyMap(), new ByteArrayInputStream(new byte[0]));
                 }
 
-                // 2. Intercept audio ads ONLY and serve silent.mp3 (NEVER intercept real Spotify CDN audio!)
-                String url = uri.toString();
+                // 2. Intercept audio ads and serve silent.mp3 with 206 Partial Content support
                 if (url.contains("/mp3-ad/") || 
                     url.contains("audio-ads.spotify.com") || 
                     url.contains("mp3ad.scdn.co") || 
                     url.contains("/ad-logic/")) {
-                    try {
-                        InputStream is = getAssets().open("silent.mp3");
-                        Map<String, String> headers = new HashMap<>();
-                        headers.put("Access-Control-Allow-Origin", "*");
-                        headers.put("Accept-Ranges", "bytes");
-                        return new WebResourceResponse("audio/mpeg", "utf-8", 200, "OK", headers, is);
-                    } catch (Exception ignored) {}
+                    return serveSilentMp3(request);
+                }
+
+                // 3. Canvas stubbing to avoid video canvas crashes on mobile
+                if (url.contains("/canvaz/") || url.contains("canvas.scdn.co") || url.contains("/v1/canvas")) {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Access-Control-Allow-Origin", "*");
+                    return new WebResourceResponse("application/json", "utf-8", 200, "OK", headers,
+                        new ByteArrayInputStream("{\"canvases\":[]}".getBytes(StandardCharsets.UTF_8)));
+                }
+
+                // 4. Google Auth document interception (spoof desktop headers for login)
+                if (url.contains("accounts.google.com") || url.contains("google.com/o/oauth2") || url.contains("accounts.youtube.com")) {
+                    WebResourceResponse docRes = fetchMainDocument(request);
+                    if (docRes != null) return docRes;
+                }
+
+                // 5. Let Spotify domains (open.spotify.com, scdn.co, etc.) be handled directly by WebView Chromium natively
+                if (host != null && (host.endsWith("spotify.com") || host.endsWith("scdn.co") || host.endsWith("spotifycdn.com"))) {
+                    return null;
+                }
+
+                // 6. Proxy external audio/media requests (podcast mirrors, external CDN)
+                if (host != null && !host.contains("google") && !host.contains("facebook")) {
+                    String path = uri.getPath();
+                    if (path != null) {
+                        String pLower = path.toLowerCase(Locale.ROOT);
+                        if (pLower.endsWith(".mp3") || pLower.endsWith(".mp4") || pLower.endsWith(".m4a") || pLower.contains("/audio/")) {
+                            WebResourceResponse proxied = proxyMediaRequest(request);
+                            if (proxied != null) return proxied;
+                        }
+                    }
                 }
 
                 return super.shouldInterceptRequest(view, request);
@@ -557,8 +593,132 @@ public class MainActivity extends Activity {
         public void onSearchCompleted(String query, String resultJson) {}
 
         @JavascriptInterface
-        public String nativeFetch(String url, String method, String headersJson, String body) {
-            return null;
+        public String nativeFetch(String urlStr, String method, String headersJson, String body) {
+            HttpURLConnection conn = null;
+            try {
+                URL url = new URL(urlStr);
+                conn = (HttpURLConnection) url.openConnection();
+                if (method == null || method.isEmpty()) method = "GET";
+                conn.setRequestMethod(method.toUpperCase(Locale.ROOT));
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+                conn.setInstanceFollowRedirects(true);
+
+                if (headersJson != null && !headersJson.isEmpty()) {
+                    try {
+                        JSONObject headersObj = new JSONObject(headersJson);
+                        Iterator<String> keys = headersObj.keys();
+                        while (keys.hasNext()) {
+                            String k = keys.next();
+                            String v = headersObj.optString(k, "");
+                            String lower = k.toLowerCase(Locale.ROOT);
+                            if (!lower.equals("x-requested-with") && !lower.startsWith("sec-ch-ua") && !lower.equals("host")) {
+                                conn.setRequestProperty(k, v);
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+
+                // Spoof Desktop Chrome client hints
+                conn.setRequestProperty("sec-ch-ua", "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"134\", \"Google Chrome\";v=\"134\"");
+                conn.setRequestProperty("sec-ch-ua-mobile", "?0");
+                conn.setRequestProperty("sec-ch-ua-platform", "\"Windows\"");
+
+                if (urlStr.contains("spclient.spotify.com") || urlStr.contains("scdn.co") || urlStr.contains("spotify.com")) {
+                    conn.setRequestProperty("Origin", "https://open.spotify.com");
+                    conn.setRequestProperty("Referer", "https://open.spotify.com/");
+                }
+
+                String ua = conn.getRequestProperty("User-Agent");
+                if (ua == null || ua.isEmpty()) {
+                    conn.setRequestProperty("User-Agent", DESKTOP_USER_AGENT);
+                }
+
+                CookieManager cookieManager = CookieManager.getInstance();
+                String cookie = cookieManager.getCookie(urlStr);
+                if (cookie == null || cookie.isEmpty()) {
+                    cookie = cookieManager.getCookie("https://open.spotify.com");
+                }
+                if (cookie != null && !cookie.isEmpty()) {
+                    conn.setRequestProperty("Cookie", cookie);
+                }
+
+                // Write body for PUT, POST, PATCH, DELETE
+                String mUpper = method.toUpperCase(Locale.ROOT);
+                if (("PUT".equals(mUpper) || "POST".equals(mUpper) || "PATCH".equals(mUpper) || "DELETE".equals(mUpper)) && body != null) {
+                    conn.setDoOutput(true);
+                    byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+                    OutputStream os = conn.getOutputStream();
+                    os.write(bytes);
+                    os.flush();
+                    os.close();
+                }
+
+                conn.connect();
+                int responseCode = conn.getResponseCode();
+
+                // Capture response headers
+                JSONObject resHeaders = new JSONObject();
+                Map<String, List<String>> headerFields = conn.getHeaderFields();
+                if (headerFields != null) {
+                    for (Map.Entry<String, List<String>> entry : headerFields.entrySet()) {
+                        String key = entry.getKey();
+                        List<String> values = entry.getValue();
+                        if (key != null && values != null && !values.isEmpty()) {
+                            resHeaders.put(key, values.get(0));
+                        }
+                    }
+
+                    // Forward Set-Cookie headers back to CookieManager
+                    List<String> setCookies = headerFields.get("Set-Cookie");
+                    if (setCookies != null) {
+                        for (String sc : setCookies) {
+                            cookieManager.setCookie(urlStr, sc);
+                        }
+                        cookieManager.flush();
+                    }
+                }
+
+                InputStream is = (responseCode >= 200 && responseCode < 300) ? conn.getInputStream() : conn.getErrorStream();
+                byte[] resBytes;
+                if (is != null) {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    byte[] buf = new byte[4096];
+                    int n;
+                    while ((n = is.read(buf)) != -1) {
+                        bos.write(buf, 0, n);
+                    }
+                    is.close();
+                    resBytes = bos.toByteArray();
+                } else {
+                    resBytes = new byte[0];
+                }
+
+                String contentType = conn.getContentType();
+                if (contentType == null) contentType = "";
+                boolean isBinary = contentType.contains("protobuf") || contentType.contains("octet-stream");
+                String bodyStr = isBinary ? Base64.encodeToString(resBytes, Base64.NO_WRAP) : new String(resBytes, StandardCharsets.UTF_8);
+
+                JSONObject result = new JSONObject();
+                result.put("status", responseCode);
+                result.put("headers", resHeaders);
+                result.put("body", bodyStr);
+                result.put("isBinary", isBinary);
+                return result.toString();
+            } catch (Exception e) {
+                android.util.Log.e("SpotiFiak", "nativeFetch error for " + urlStr, e);
+                try {
+                    JSONObject err = new JSONObject();
+                    err.put("status", 500);
+                    err.put("body", e.getMessage() != null ? e.getMessage() : "Native fetch error");
+                    return err.toString();
+                } catch (Exception ignored) {}
+                return null;
+            } finally {
+                if (conn != null) {
+                    try { conn.disconnect(); } catch (Exception ignored) {}
+                }
+            }
         }
     }
 
@@ -671,7 +831,7 @@ public class MainActivity extends Activity {
             try {
                 return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
             } catch (Exception e) {
-                return "1.4.3";
+                return "1.4.4";
             }
         }
 
@@ -841,5 +1001,197 @@ public class MainActivity extends Activity {
 
     private int dpToPx(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    private byte[] silentMp3Bytes = null;
+
+    private WebResourceResponse serveSilentMp3(WebResourceRequest request) {
+        try {
+            if (silentMp3Bytes == null) {
+                InputStream is = getAssets().open("silent.mp3");
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                byte[] buf = new byte[1024];
+                int n;
+                while ((n = is.read(buf)) != -1) bos.write(buf, 0, n);
+                is.close();
+                silentMp3Bytes = bos.toByteArray();
+            }
+
+            int length = silentMp3Bytes.length;
+            Map<String, String> reqHeaders = request.getRequestHeaders();
+            String range = null;
+            if (reqHeaders != null) {
+                range = reqHeaders.get("Range");
+                if (range == null) range = reqHeaders.get("range");
+            }
+
+            Map<String, String> resHeaders = new HashMap<>();
+            resHeaders.put("Access-Control-Allow-Origin", "*");
+            resHeaders.put("Accept-Ranges", "bytes");
+
+            if (range != null && range.startsWith("bytes=")) {
+                String[] parts = range.substring(6).split("-");
+                int start = Integer.parseInt(parts[0]);
+                int end = (parts.length > 1 && !parts[1].isEmpty()) ? Integer.parseInt(parts[1]) : length - 1;
+                start = Math.max(0, Math.min(start, length - 1));
+                end = Math.max(start, Math.min(end, length - 1));
+                int len = end - start + 1;
+                byte[] chunk = Arrays.copyOfRange(silentMp3Bytes, start, end + 1);
+
+                resHeaders.put("Content-Range", "bytes " + start + "-" + end + "/" + length);
+                resHeaders.put("Content-Length", String.valueOf(len));
+                return new WebResourceResponse("audio/mpeg", null, 206, "Partial Content", resHeaders, new ByteArrayInputStream(chunk));
+            }
+
+            resHeaders.put("Content-Length", String.valueOf(length));
+            return new WebResourceResponse("audio/mpeg", null, 200, "OK", resHeaders, new ByteArrayInputStream(silentMp3Bytes));
+        } catch (Exception e) {
+            return new WebResourceResponse("audio/mpeg", "utf-8", 200, "OK", Collections.emptyMap(), new ByteArrayInputStream(new byte[0]));
+        }
+    }
+
+    private WebResourceResponse fetchMainDocument(WebResourceRequest request) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(request.getUrl().toString());
+            conn = (HttpURLConnection) url.openConnection();
+            String method = request.getMethod();
+            if (method == null) method = "GET";
+            conn.setRequestMethod(method);
+            conn.setInstanceFollowRedirects(true);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+
+            Map<String, String> reqHeaders = request.getRequestHeaders();
+            if (reqHeaders != null) {
+                for (Map.Entry<String, String> entry : reqHeaders.entrySet()) {
+                    String k = entry.getKey();
+                    String v = entry.getValue();
+                    String lower = k.toLowerCase(Locale.ROOT);
+                    if (!lower.equals("x-requested-with") && !lower.startsWith("sec-ch-ua") && !lower.equals("user-agent") && !lower.equals("sec-gpc")) {
+                        conn.setRequestProperty(k, v);
+                    }
+                }
+            }
+
+            conn.setRequestProperty("User-Agent", DESKTOP_USER_AGENT);
+            conn.setRequestProperty("sec-ch-ua", "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"134\", \"Google Chrome\";v=\"134\"");
+            conn.setRequestProperty("sec-ch-ua-mobile", "?0");
+            conn.setRequestProperty("sec-ch-ua-platform", "\"Windows\"");
+            conn.setRequestProperty("sec-gpc", "1");
+
+            CookieManager cookieManager = CookieManager.getInstance();
+            String cookie = cookieManager.getCookie(request.getUrl().toString());
+            if (cookie != null && !cookie.isEmpty()) {
+                conn.setRequestProperty("Cookie", cookie);
+            }
+
+            conn.connect();
+
+            Map<String, List<String>> headerFields = conn.getHeaderFields();
+            if (headerFields != null) {
+                List<String> setCookies = headerFields.get("Set-Cookie");
+                if (setCookies != null) {
+                    for (String sc : setCookies) {
+                        cookieManager.setCookie(request.getUrl().toString(), sc);
+                    }
+                    cookieManager.flush();
+                }
+            }
+
+            int code = conn.getResponseCode();
+            String message = conn.getResponseMessage();
+            if (message == null) message = "OK";
+
+            Map<String, String> resHeaders = new HashMap<>();
+            if (headerFields != null) {
+                for (Map.Entry<String, List<String>> entry : headerFields.entrySet()) {
+                    String k = entry.getKey();
+                    List<String> vals = entry.getValue();
+                    if (k != null && vals != null && !vals.isEmpty()) {
+                        resHeaders.put(k, vals.get(0));
+                    }
+                }
+            }
+
+            InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+            String contentType = conn.getContentType();
+            String mimeType = "text/html";
+            String encoding = "utf-8";
+            if (contentType != null) {
+                String[] parts = contentType.split(";");
+                mimeType = parts[0].trim();
+                if (parts.length > 1 && parts[1].contains("charset=")) {
+                    encoding = parts[1].split("charset=")[1].trim();
+                }
+            }
+
+            return new WebResourceResponse(mimeType, encoding, code, message, resHeaders, is);
+        } catch (Exception e) {
+            android.util.Log.e("SpotiFiak", "Error fetching main document", e);
+            return null;
+        }
+    }
+
+    private WebResourceResponse proxyMediaRequest(WebResourceRequest request) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(request.getUrl().toString());
+            conn = (HttpURLConnection) url.openConnection();
+            String method = request.getMethod();
+            if (method == null) method = "GET";
+            conn.setRequestMethod(method);
+            conn.setInstanceFollowRedirects(true);
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(10000);
+
+            Map<String, String> reqHeaders = request.getRequestHeaders();
+            if (reqHeaders != null) {
+                for (Map.Entry<String, String> entry : reqHeaders.entrySet()) {
+                    String k = entry.getKey();
+                    String v = entry.getValue();
+                    String lower = k.toLowerCase(Locale.ROOT);
+                    if (!lower.equals("host") && !lower.equals("x-requested-with") && !lower.startsWith("sec-ch-ua")) {
+                        conn.setRequestProperty(k, v);
+                    }
+                }
+            }
+
+            conn.setRequestProperty("User-Agent", DESKTOP_USER_AGENT);
+            int code = conn.getResponseCode();
+
+            Map<String, String> resHeaders = new HashMap<>();
+            resHeaders.put("Access-Control-Allow-Origin", "*");
+            resHeaders.put("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+            resHeaders.put("Access-Control-Allow-Headers", "*");
+
+            Map<String, List<String>> headerFields = conn.getHeaderFields();
+            if (headerFields != null) {
+                for (Map.Entry<String, List<String>> entry : headerFields.entrySet()) {
+                    String k = entry.getKey();
+                    List<String> vals = entry.getValue();
+                    if (k != null && vals != null && !vals.isEmpty()) {
+                        String lower = k.toLowerCase(Locale.ROOT);
+                        if (lower.equals("content-range") || lower.equals("content-length") || lower.equals("content-type") || lower.equals("accept-ranges")) {
+                            resHeaders.put(k, vals.get(0));
+                        }
+                    }
+                }
+            }
+
+            String contentType = conn.getContentType();
+            if (contentType == null) contentType = "audio/mpeg";
+            String mime = contentType.split(";")[0].trim();
+
+            InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+            if (is == null) return null;
+
+            String message = conn.getResponseMessage();
+            if (message == null) message = "OK";
+
+            return new WebResourceResponse(mime, null, code, message, resHeaders, is);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -17,7 +17,7 @@
 
     // Ensure SpotiFiak API is present or initialize fallback
     window.SpotiFiak = window.SpotiFiak || {
-      version: '1.2.0',
+      version: '1.4.4',
       platform: 'android',
       injectedStyles: new Map(),
       getStorage(k, def) {
@@ -58,7 +58,7 @@
     // ── In-App Update State & Handlers ──
     const currentAppVersion = (window.SpotiFiakNative && (window.SpotiFiakNative.getAppVersion || window.SpotiFiakNative.getVersion))
       ? (window.SpotiFiakNative.getAppVersion ? window.SpotiFiakNative.getAppVersion() : window.SpotiFiakNative.getVersion())
-      : '1.4.3';
+      : '1.4.4';
     let latestUpdateInfo = null;
     let isCheckingUpdate = false;
     let isDownloadingUpdate = false;
@@ -323,7 +323,7 @@
                   <h1 style="margin:0; font-size:1.45rem; font-weight:900; background:linear-gradient(135deg,#ff6e6e,#ffa07a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px;">
                     SpotiFiak
                   </h1>
-                  <span style="background:rgba(255,110,110,0.18); border:1px solid rgba(255,110,110,0.35); color:#ffa07a; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:10px;">v1.4.3</span>
+                  <span style="background:rgba(255,110,110,0.18); border:1px solid rgba(255,110,110,0.35); color:#ffa07a; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:10px;">v1.4.4</span>
                 </div>
                 <p style="margin:2px 0 0; font-size:0.75rem; color:#a0a0b0;">SpotiFiak Hub • ${totalAddons} addons • ${installedCount} actif${installedCount > 1 ? 's' : ''}</p>
               </div>
