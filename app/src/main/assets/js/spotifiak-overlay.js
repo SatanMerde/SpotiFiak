@@ -427,7 +427,7 @@
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="font-size:1.2rem;">🚀</span>
               <div>
-                <div style="font-size:0.8rem;font-weight:800;color:#fff;">Mise à jour v${latestUpdateInfo.latestVersion} disponible</div>
+                <div style="font-size:0.8rem;font-weight:800;color:#fff;">Mise à jour v${(latestUpdateInfo.latestVersion || '').replace(/^v+/i, '')} disponible</div>
                 <div style="font-size:0.7rem;color:#ffb0b0;">Installation directe en 1 clic sans désinstaller</div>
               </div>
             </div>
@@ -696,7 +696,8 @@
 
     function renderSettings() {
       const hasUpdate = latestUpdateInfo && latestUpdateInfo.isUpdateAvailable;
-      const statusPillText = hasUpdate ? `v${latestUpdateInfo.latestVersion} disponible !` : (isCheckingUpdate ? 'Vérification...' : 'À jour');
+      const cleanLatestVer = (latestUpdateInfo?.latestVersion || '').replace(/^v+/i, '');
+      const statusPillText = hasUpdate ? `v${cleanLatestVer} disponible !` : (isCheckingUpdate ? 'Vérification...' : 'À jour');
       const statusPillStyle = hasUpdate 
         ? 'background:rgba(255,110,110,0.2); color:#ff6e6e; border:1px solid rgba(255,110,110,0.5); font-weight:800;'
         : 'background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3);';

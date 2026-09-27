@@ -180,8 +180,9 @@ public class UpdateManager {
 
                 String currentVersion = getCurrentVersion(context);
                 boolean hasUpdate = isVersionNewer(tagName, currentVersion);
+                String cleanVersion = tagName.replaceFirst("^v", "");
 
-                UpdateInfo info = new UpdateInfo(hasUpdate, tagName, currentVersion, title, body, apkDownloadUrl);
+                UpdateInfo info = new UpdateInfo(hasUpdate, cleanVersion, currentVersion, title, body, apkDownloadUrl);
                 mainHandler.post(() -> callback.onResult(info));
 
             } catch (Exception e) {
