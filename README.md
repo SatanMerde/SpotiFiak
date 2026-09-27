@@ -82,6 +82,7 @@ graph TD
   - **Sleep Timer** : Minuteur d'extinction automatique avec fondu sonore.
   - **Equalizer Pro** : Égaliseur audio 10 bandes.
 - 🔗 **Couche d'Émulation Spicetify PC** : Support des APIs Spicetify classiques (`Spicetify.Player`, `Spicetify.CosmosAsync`, `Spicetify.LocalStorage`, `Spicetify.PopupModal`, `Spicetify.URI`).
+- 🔄 **Mise à Jour In-App en 1 Clic** : Plus besoin de désinstaller l'application ni d'aller manuellement sur GitHub ! SpotiFiak détecte automatiquement les nouvelles versions, télécharge le nouvel APK et lance la mise à jour directement par-dessus votre installation sans perte de données.
 - 🚀 **Zéro Compte Développeur Requis** : L'APK est compilé automatiquement par GitHub Actions à chaque version et téléchargeable librement.
 
 ---

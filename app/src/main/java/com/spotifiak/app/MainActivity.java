@@ -36,13 +36,16 @@ import android.widget.Toast;
 import android.view.Gravity;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
 
     private WebView webView;
+    private UpdateManager updateManager = new UpdateManager();
     private MediaSession mediaSession;
     private boolean isPlaying = false;
 
@@ -438,7 +441,59 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String getVersion() {
-            return "1.0.0";
+            return UpdateManager.getCurrentVersion(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public void checkForUpdates() {
+            updateManager.checkForUpdates(MainActivity.this, new UpdateManager.UpdateCheckCallback() {
+                @Override
+                public void onResult(UpdateManager.UpdateInfo info) {
+                    runOnUiThread(() -> {
+                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateCheckResult && window.SpotiFiak.onUpdateCheckResult(" + info.toJson().toString() + ");";
+                        webView.evaluateJavascript(js, null);
+                    });
+                }
+
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(() -> {
+                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateCheckError && window.SpotiFiak.onUpdateCheckError(" + JSONObject.quote(error) + ");";
+                        webView.evaluateJavascript(js, null);
+                    });
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void downloadAndInstallUpdate(String apkUrl) {
+            runOnUiThread(() -> Toast.makeText(MainActivity.this, "Téléchargement de la mise à jour...", Toast.LENGTH_SHORT).show());
+            updateManager.downloadAndInstall(MainActivity.this, apkUrl, new UpdateManager.DownloadProgressCallback() {
+                @Override
+                public void onProgress(int percent, long downloadedBytes, long totalBytes) {
+                    runOnUiThread(() -> {
+                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateProgress && window.SpotiFiak.onUpdateProgress(" + percent + ", " + downloadedBytes + ", " + totalBytes + ");";
+                        webView.evaluateJavascript(js, null);
+                    });
+                }
+
+                @Override
+                public void onComplete(File apkFile) {
+                    runOnUiThread(() -> {
+                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateComplete && window.SpotiFiak.onUpdateComplete();";
+                        webView.evaluateJavascript(js, null);
+                    });
+                }
+
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, error, Toast.LENGTH_LONG).show();
+                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateError && window.SpotiFiak.onUpdateError(" + JSONObject.quote(error) + ");";
+                        webView.evaluateJavascript(js, null);
+                    });
+                }
+            });
         }
 
         @JavascriptInterface
@@ -451,6 +506,12 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        UpdateManager.handleActivityResult(this, requestCode, resultCode);
     }
 
     // Handle back button — close overlays first, then go back in history

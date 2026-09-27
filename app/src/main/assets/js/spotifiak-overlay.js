@@ -55,6 +55,75 @@
       'theme-peach-sunset': { enabled: true, date: Date.now() }
     });
 
+    // ── In-App Update State & Handlers ──
+    const currentAppVersion = (window.SpotiFiakNative && window.SpotiFiakNative.getVersion) ? window.SpotiFiakNative.getVersion() : '1.2.0';
+    let latestUpdateInfo = null;
+    let isCheckingUpdate = false;
+    let isDownloadingUpdate = false;
+
+    function isVersionNewer(latest, current) {
+      if (!latest || !current) return false;
+      const l = latest.replace(/^v/i, '').split('.').map(n => parseInt(n) || 0);
+      const c = current.replace(/^v/i, '').split('.').map(n => parseInt(n) || 0);
+      for (let i = 0; i < Math.max(l.length, c.length); i++) {
+        const lv = l[i] || 0;
+        const cv = c[i] || 0;
+        if (lv > cv) return true;
+        if (lv < cv) return false;
+      }
+      return false;
+    }
+
+    SF.onUpdateCheckResult = function(info) {
+      isCheckingUpdate = false;
+      latestUpdateInfo = info;
+      if (info && info.isUpdateAvailable) {
+        showInAppToast('Mise à jour disponible 🚀', 'La version v' + info.latestVersion + ' est disponible !');
+      } else if (window._userRequestedUpdateCheck) {
+        showInAppToast('SpotiFiak à jour ✨', 'Vous utilisez déjà la dernière version (v' + (info ? info.currentVersion : currentAppVersion) + ')');
+        window._userRequestedUpdateCheck = false;
+      }
+      if (panelOpen) renderPanel();
+    };
+
+    SF.onUpdateCheckError = function(err) {
+      isCheckingUpdate = false;
+      if (window._userRequestedUpdateCheck) {
+        showInAppToast('Mises à jour', err || 'Erreur lors de la vérification');
+        window._userRequestedUpdateCheck = false;
+      }
+      if (panelOpen) renderPanel();
+    };
+
+    SF.onUpdateProgress = function(percent, downloaded, total) {
+      isDownloadingUpdate = true;
+      const progContainer = document.getElementById('sf-update-progress-container');
+      const progBar = document.getElementById('sf-update-progress-bar');
+      const progPercent = document.getElementById('sf-update-progress-percent');
+      const progText = document.getElementById('sf-update-progress-text');
+      if (progContainer) progContainer.style.display = 'block';
+      if (progBar) progBar.style.width = percent + '%';
+      if (progPercent) progPercent.textContent = percent + '%';
+      if (progText && total > 0) {
+        const dMb = (downloaded / (1024 * 1024)).toFixed(1);
+        const tMb = (total / (1024 * 1024)).toFixed(1);
+        progText.textContent = `Téléchargement : ${dMb} / ${tMb} Mo`;
+      }
+    };
+
+    SF.onUpdateComplete = function() {
+      isDownloadingUpdate = false;
+      showInAppToast('Prêt à installer 📦', 'Ouverture de l\'installateur Android...');
+      const progText = document.getElementById('sf-update-progress-text');
+      if (progText) progText.textContent = 'Téléchargement terminé ! Installation...';
+    };
+
+    SF.onUpdateError = function(err) {
+      isDownloadingUpdate = false;
+      showInAppToast('Erreur', err || 'Échec du téléchargement');
+      if (panelOpen) renderPanel();
+    };
+
     // ── In-App Toast Notification ──
     function showInAppToast(title, message) {
       let container = document.getElementById('sf-toast-container');
@@ -105,6 +174,7 @@
     let searchQuery = '';
     let filterType = 'all';
     let sortBy = 'popular';
+    let currentTab = 'marketplace';
 
     function togglePanel() {
       panelOpen = !panelOpen;
@@ -294,6 +364,11 @@
       const themeCount = addonRegistry.filter(a => a.type === 'theme').length;
       const extCount = addonRegistry.filter(a => a.type === 'extension').length;
 
+      let contentHtml = renderMarketplace();
+      if (currentTab === 'installed') contentHtml = renderInstalled();
+      else if (currentTab === 'custom-css') contentHtml = renderCustomCSS();
+      else if (currentTab === 'settings') contentHtml = renderSettings();
+
       panel.innerHTML = `
         <div style="padding: 18px 16px 0; padding-top: max(18px, env(safe-area-inset-top));">
           <!-- Header with Peach Branding -->
@@ -327,10 +402,10 @@
           <!-- Sort + Navigation Tabs -->
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
             <div id="sf-tabs" style="display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; flex:1;">
-              <button class="sf-tab sf-tab-active" data-tab="marketplace" style="${tabStyle(true)}">🏪 Boutique</button>
-              <button class="sf-tab" data-tab="installed" style="${tabStyle(false)}">📦 Installés</button>
-              <button class="sf-tab" data-tab="custom-css" style="${tabStyle(false)}">✏️ CSS</button>
-              <button class="sf-tab" data-tab="settings" style="${tabStyle(false)}">⚙️ Réglages</button>
+              <button class="sf-tab ${currentTab==='marketplace'?'sf-tab-active':''}" data-tab="marketplace" style="${tabStyle(currentTab==='marketplace')}">🏪 Boutique</button>
+              <button class="sf-tab ${currentTab==='installed'?'sf-tab-active':''}" data-tab="installed" style="${tabStyle(currentTab==='installed')}">📦 Installés</button>
+              <button class="sf-tab ${currentTab==='custom-css'?'sf-tab-active':''}" data-tab="custom-css" style="${tabStyle(currentTab==='custom-css')}">✏️ CSS</button>
+              <button class="sf-tab ${currentTab==='settings'?'sf-tab-active':''}" data-tab="settings" style="${tabStyle(currentTab==='settings')}">⚙️ Réglages</button>
             </div>
             <select id="sf-sort-select" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#a0a0b0;font-size:0.72rem;padding:4px 8px;outline:none;cursor:pointer;margin-left:6px;">
               <option value="popular" ${sortBy==='popular'?'selected':''}>📈 Populaires</option>
@@ -339,11 +414,25 @@
               <option value="newest" ${sortBy==='newest'?'selected':''}>🆕 Récents</option>
             </select>
           </div>
+          ${latestUpdateInfo && latestUpdateInfo.isUpdateAvailable ? `
+          <div id="sf-top-update-alert" style="background:linear-gradient(135deg,rgba(255,110,110,0.22),rgba(255,160,122,0.16));border:1px solid rgba(255,110,110,0.45);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:1.2rem;">🚀</span>
+              <div>
+                <div style="font-size:0.8rem;font-weight:800;color:#fff;">Mise à jour v${latestUpdateInfo.latestVersion} disponible</div>
+                <div style="font-size:0.7rem;color:#ffb0b0;">Installation directe en 1 clic sans désinstaller</div>
+              </div>
+            </div>
+            <button id="sf-alert-update-btn" style="padding:6px 12px;border-radius:8px;background:linear-gradient(135deg,#ff6e6e,#ffa07a);border:none;color:#fff;font-weight:800;font-size:0.72rem;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(255,110,110,0.35);">
+              Mettre à jour
+            </button>
+          </div>
+          ` : ''}
         </div>
 
         <!-- Content Area -->
         <div id="sf-tab-content" style="padding: 0 16px 120px;">
-          ${renderMarketplace()}
+          ${contentHtml}
         </div>
       `;
 
@@ -385,6 +474,7 @@
       // Bind tab navigation
       panel.querySelectorAll('.sf-tab').forEach(tab => {
         tab.addEventListener('click', () => {
+          currentTab = tab.dataset.tab;
           panel.querySelectorAll('.sf-tab').forEach(t => {
             t.style.background = 'rgba(255,255,255,0.06)';
             t.style.color = '#a0a0b0';
@@ -403,7 +493,8 @@
     }
 
     function updateTabContent(tabId) {
-      const activeTab = tabId || panel.querySelector('.sf-tab-active')?.dataset?.tab || 'marketplace';
+      if (tabId) currentTab = tabId;
+      const activeTab = currentTab || 'marketplace';
       const content = panel.querySelector('#sf-tab-content');
       if (!content) return;
 
@@ -596,8 +687,58 @@
     }
 
     function renderSettings() {
+      const hasUpdate = latestUpdateInfo && latestUpdateInfo.isUpdateAvailable;
+      const statusPillText = hasUpdate ? `v${latestUpdateInfo.latestVersion} disponible !` : (isCheckingUpdate ? 'Vérification...' : 'À jour');
+      const statusPillStyle = hasUpdate 
+        ? 'background:rgba(255,110,110,0.2); color:#ff6e6e; border:1px solid rgba(255,110,110,0.5); font-weight:800;'
+        : 'background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3);';
+
       return `
         <div style="display:flex; flex-direction:column; gap:12px;">
+          <!-- In-App Auto-Updater Card -->
+          <div style="background:rgba(25,27,38,0.7); border:1px solid ${hasUpdate ? 'rgba(255,110,110,0.45)' : 'rgba(255,255,255,0.08)'}; border-radius:14px; padding:16px; position:relative; overflow:hidden;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.4rem;">🚀</span>
+                <div>
+                  <div style="font-weight:700; font-size:0.95rem;">Mises à jour SpotiFiak</div>
+                  <div style="font-size:0.75rem; color:#888;">Version installée : <span style="color:#ff6e6e; font-weight:700;">v${currentAppVersion}</span></div>
+                </div>
+              </div>
+              <span id="sf-update-status-pill" style="font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:10px; ${statusPillStyle}">
+                ${statusPillText}
+              </span>
+            </div>
+            
+            <div id="sf-update-details" style="font-size:0.75rem; color:#a0a0b0; margin-bottom:12px; line-height:1.4;">
+              ${hasUpdate 
+                ? `Nouvelle version <b>v${latestUpdateInfo.latestVersion}</b> disponible ! Touchez "Mettre à jour" pour installer directement la mise à jour sans désinstaller l'application.`
+                : 'Mettez à jour SpotiFiak directement depuis l\'application sans devoir désinstaller ni passer par un navigateur.'}
+            </div>
+
+            <!-- Progress bar container -->
+            <div id="sf-update-progress-container" style="display:${isDownloadingUpdate ? 'block' : 'none'}; margin-bottom:12px;">
+              <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:#ff6e6e; margin-bottom:4px; font-weight:600;">
+                <span id="sf-update-progress-text">Téléchargement en cours...</span>
+                <span id="sf-update-progress-percent">0%</span>
+              </div>
+              <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                <div id="sf-update-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg,#ff6e6e,#ffa07a); transition:width 0.2s;"></div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+              <button id="sf-check-update-btn" style="flex:1; padding:9px 14px; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#fff; font-weight:700; font-size:0.8rem; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+                <span>🔄</span> ${isCheckingUpdate ? 'Vérification...' : 'Vérifier'}
+              </button>
+              ${hasUpdate ? `
+              <button id="sf-install-update-btn" style="flex:1.2; padding:9px 14px; border-radius:10px; background:linear-gradient(135deg,#ff6e6e,#ffa07a); border:none; color:#fff; font-weight:800; font-size:0.8rem; cursor:pointer; font-family:inherit; box-shadow:0 4px 14px rgba(255,110,110,0.4); display:flex; align-items:center; justify-content:center; gap:6px;">
+                <span>📥</span> Mettre à jour
+              </button>
+              ` : ''}
+            </div>
+          </div>
+
           <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
             <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">📱 Affichage Mobile Optimisé</div>
             <div style="font-size:0.75rem; color:#888; margin-bottom:12px;">Adapte Spotify Desktop sur écran de téléphone (plein écran, barre de navigation tactile).</div>
@@ -617,7 +758,7 @@
           <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
             <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">ℹ️ À propos de SpotiFiak</div>
             <div style="font-size:0.78rem; color:#a0a0b0; line-height:1.6;">
-              SpotiFiak v1.2.0 • Client Spicetify Mobile pour Android.<br/>
+              SpotiFiak v${currentAppVersion} • Client Spicetify Mobile pour Android.<br/>
               Inspiré de l'architecture WebView de SpotiDuck, avec gestion complète des thèmes et extensions.<br/><br/>
               <span style="color:#606070;">
                 📜 Ce projet est open-source sous licence MIT.<br/>
@@ -722,6 +863,58 @@
           renderPanel();
         });
       }
+
+      // Update buttons
+      const checkUpdateBtn = document.getElementById('sf-check-update-btn');
+      if (checkUpdateBtn) {
+        checkUpdateBtn.addEventListener('click', () => {
+          isCheckingUpdate = true;
+          window._userRequestedUpdateCheck = true;
+          renderPanel();
+          if (window.SpotiFiakNative && window.SpotiFiakNative.checkForUpdates) {
+            window.SpotiFiakNative.checkForUpdates();
+          } else {
+            fetch('https://api.github.com/repos/SatanMerde/SpotiFiak/releases/latest')
+              .then(r => r.json())
+              .then(data => {
+                const latestTag = data.tag_name || 'v1.2.0';
+                const hasUp = isVersionNewer(latestTag, currentAppVersion);
+                let apkUrl = 'https://github.com/SatanMerde/SpotiFiak/releases/latest/download/SpotiFiak.apk';
+                if (data.assets) {
+                  const apkAsset = data.assets.find(a => a.name.endsWith('.apk'));
+                  if (apkAsset) apkUrl = apkAsset.browser_download_url;
+                }
+                SF.onUpdateCheckResult({
+                  isUpdateAvailable: hasUp,
+                  latestVersion: latestTag.replace(/^v/, ''),
+                  currentVersion: currentAppVersion,
+                  title: data.name || latestTag,
+                  releaseNotes: data.body || '',
+                  apkDownloadUrl: apkUrl
+                });
+              })
+              .catch(err => SF.onUpdateCheckError(err.message));
+          }
+        });
+      }
+
+      const triggerInstall = () => {
+        if (!latestUpdateInfo || !latestUpdateInfo.apkDownloadUrl) return;
+        isDownloadingUpdate = true;
+        const progContainer = document.getElementById('sf-update-progress-container');
+        if (progContainer) progContainer.style.display = 'block';
+        if (window.SpotiFiakNative && window.SpotiFiakNative.downloadAndInstallUpdate) {
+          window.SpotiFiakNative.downloadAndInstallUpdate(latestUpdateInfo.apkDownloadUrl);
+        } else {
+          window.open(latestUpdateInfo.apkDownloadUrl, '_blank');
+        }
+      };
+
+      const installUpdateBtn = document.getElementById('sf-install-update-btn');
+      if (installUpdateBtn) installUpdateBtn.addEventListener('click', triggerInstall);
+
+      const alertUpdateBtn = document.getElementById('sf-alert-update-btn');
+      if (alertUpdateBtn) alertUpdateBtn.addEventListener('click', triggerInstall);
     }
 
     function applyTheme(themeId) {
@@ -865,6 +1058,13 @@
     if (savedCustomCss) {
       SF.injectCSS('user-custom', savedCustomCss);
     }
+
+    // Auto-check for updates silently 3s after startup
+    setTimeout(() => {
+      if (window.SpotiFiakNative && window.SpotiFiakNative.checkForUpdates) {
+        window.SpotiFiakNative.checkForUpdates();
+      }
+    }, 3000);
   }
 
   // Initialize once DOM is accessible

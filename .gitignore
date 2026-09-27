@@ -19,3 +19,4 @@ local.properties
 !docs/assets/*.png
 test_*.py
 scratch/
+.vscode/
