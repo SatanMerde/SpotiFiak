@@ -106,10 +106,18 @@ public class MainActivity extends Activity {
 
         // Load Spotify
         webView.loadUrl(SPOTIFY_URL);
+
+        // Guaranteed timed injection retries (independent of onPageFinished delays)
+        webView.postDelayed(() -> injectSpotiFiak(webView), 1500);
+        webView.postDelayed(() -> injectSpotiFiak(webView), 3500);
+        webView.postDelayed(() -> injectSpotiFiak(webView), 6500);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private void setupWebView() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
         WebSettings settings = webView.getSettings();
 
         // JavaScript — essential for Spotify
@@ -185,8 +193,16 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Chrome client for fullscreen video, console logs etc.
+        // Chrome client for fullscreen video, console logs, and progress-based injection
         webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                super.onProgressChanged(view, newProgress);
+                if (newProgress >= 50) {
+                    injectSpotiFiak(view);
+                }
+            }
+
             @Override
             public boolean onConsoleMessage(android.webkit.ConsoleMessage msg) {
                 android.util.Log.d("SpotiFiak", msg.message());
@@ -202,11 +218,17 @@ public class MainActivity extends Activity {
      * Inject early viewport meta tag and CSS before full DOM finishes
      */
     private void injectEarlyFixes(WebView view) {
+        String mobileCss = loadAsset("css/mobile-fixes.css");
         String initJs = 
             "(() => {" +
             "  let m = document.querySelector('meta[name=\"viewport\"]');" +
-            "  if (!m) { m = document.createElement('meta'); m.name = 'viewport'; if (document.head) document.head.appendChild(m); }" +
+            "  if (!m && document.head) { m = document.createElement('meta'); m.name = 'viewport'; document.head.appendChild(m); }" +
             "  if (m) m.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';" +
+            "  if (document.head && !document.getElementById('spotifiak-mobile-fixes')) {" +
+            "    let s = document.createElement('style'); s.id = 'spotifiak-mobile-fixes';" +
+            "    s.textContent = " + (mobileCss != null ? escapeForJS(mobileCss) : "''") + ";" +
+            "    document.head.appendChild(s);" +
+            "  }" +
             "})();";
         view.evaluateJavascript(initJs, null);
     }
@@ -431,11 +453,35 @@ public class MainActivity extends Activity {
         }
     }
 
-    // Handle back button — go back in WebView history
+    // Handle back button — close overlays first, then go back in history
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
-            webView.goBack();
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            webView.evaluateJavascript(
+                "(() => {" +
+                "  let p = document.getElementById('spotifiak-panel');" +
+                "  if (p && (p.style.top === '0px' || p.style.top === '0%')) {" +
+                "    if (window.toggleSpotiFiakPanel) window.toggleSpotiFiakPanel();" +
+                "    return 'closed_panel';" +
+                "  }" +
+                "  if (document.body.classList.contains('sf-show-library')) {" +
+                "    document.body.classList.remove('sf-show-library');" +
+                "    return 'closed_library';" +
+                "  }" +
+                "  return 'none';" +
+                "})();",
+                value -> {
+                    if (value == null || "\"none\"".equals(value)) {
+                        runOnUiThread(() -> {
+                            if (webView.canGoBack()) {
+                                webView.goBack();
+                            } else {
+                                finish();
+                            }
+                        });
+                    }
+                }
+            );
             return true;
         }
         return super.onKeyDown(keyCode, event);

@@ -208,10 +208,28 @@ Les contributions pour ajouter de nouveaux thèmes ou extensions sont les bienve
 
 ## ⚠️ Avertissement Légal
 
-Ce projet est un projet éducatif, open-source et expérimental. Il n'est **ni affilié, ni sponsorisé, ni approuvé par Spotify AB**. Toutes les marques déposées appartiennent à leurs propriétaires respectifs.
+Ce projet est un projet **éducatif, open-source et expérimental**. Il n'est **ni affilié, ni sponsorisé, ni approuvé par Spotify AB**.
+
+- 🔒 **Aucune donnée personnelle collectée** — Zéro tracking, zéro analytics, zéro telemetry
+- 📜 **Aucun contenu protégé modifié** — SpotiFiak ne télécharge, ne copie et ne redistribue aucun contenu musical
+- 🚫 **Aucun DRM contourné** — La lecture audio est gérée intégralement par le lecteur web de Spotify
+- ⚖️ **Usage personnel uniquement** — L'utilisateur est responsable du respect des CGU de Spotify
+
+Toutes les marques déposées appartiennent à leurs propriétaires respectifs. « Spotify » est une marque déposée de Spotify AB.
+
+📄 **Documents légaux complets :**
+- [📜 Informations Légales](docs/LEGAL.md) — Conditions d'utilisation, non-affiliation, propriété intellectuelle
+- [🔒 Politique de Confidentialité](docs/PRIVACY.md) — Zéro collecte de données, permissions Android, stockage local
+
+---
+
+## 📋 Licence
+
+SpotiFiak est distribué sous la **[Licence MIT](LICENSE)** — libre d'utilisation, de modification et de redistribution.
 
 ---
 
 <div align="center">
-  <b>SpotiFiak</b> — Développé avec ❤️ par <a href="https://github.com/SatanMerde">SatanMerde</a>
+  <b>SpotiFiak</b> 🍑 — Développé avec ❤️ par <a href="https://github.com/SatanMerde">SatanMerde</a><br/>
+  <sub>Projet open-source éducatif • Non affilié à Spotify AB • 2026</sub>
 </div>

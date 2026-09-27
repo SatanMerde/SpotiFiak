@@ -6,6 +6,8 @@
 (function() {
   'use strict';
 
+  const PEACH_LOGO_SRC = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZmOWE4YiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iI2ZmNmU2ZSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNlODUzNGEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InBzIiBjeD0iMC4zIiBjeT0iMC4zIiByPSIwLjciPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMzUpIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0icmdiYSgyNTUsMjU1LDI1NSwwKSIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPGNpcmNsZSBjeD0iMzIiIGN5PSIzNSIgcj0iMjciIGZpbGw9InVybCgjcGcpIi8+CiAgPGNpcmNsZSBjeD0iMzIiIGN5PSIzNSIgcj0iMjciIGZpbGw9InVybCgjcHMpIi8+CiAgPHBhdGggZD0iTTMyIDEwIFEzNyAzIDQzIDUgUTM4IDEwIDM0IDE3IFoiIGZpbGw9IiM0Q0FGNTAiLz4KICA8cGF0aCBkPSJNMzIgMTAgUTI3IDMgMjEgNiBRMjYgMTEgMzAgMTcgWiIgZmlsbD0iIzY2QkI2QSIvPgogIDxwYXRoIGQ9Ik0xOSAzMCBDMTkgMTkgNDUgMTkgNDUgMzAiIHN0cm9rZT0iIzFhMWEyZSIgc3Ryb2tlLXdpZHRoPSIzIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNMjEgMzcgQzIxIDI3IDQzIDI3IDQzIDM3IiBzdHJva2U9IiMxYTFhMmUiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHBhdGggZD0iTTIzIDQ0IEMyMyAzNSA0MSAzNSA0MSA0NCIgc3Ryb2tlPSIjMWExYTJlIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=';
+
   function initSpotiFiak() {
     if (document.getElementById('sf-bottom-nav')) return;
     if (!document.body) {
@@ -15,7 +17,7 @@
 
     // Ensure SpotiFiak API is present or initialize fallback
     window.SpotiFiak = window.SpotiFiak || {
-      version: '1.1.0',
+      version: '1.2.0',
       platform: 'android',
       injectedStyles: new Map(),
       getStorage(k, def) {
@@ -43,6 +45,8 @@
         if (window.SpotiFiakNative && window.SpotiFiakNative.showToast) {
           window.SpotiFiakNative.showToast(title + ': ' + msg);
         }
+        // Also show in-app toast
+        showInAppToast(title, msg);
       }
     };
 
@@ -50,6 +54,35 @@
     let installedAddons = SF.getStorage('installed_addons', {
       'theme-peach-sunset': { enabled: true, date: Date.now() }
     });
+
+    // ── In-App Toast Notification ──
+    function showInAppToast(title, message) {
+      let container = document.getElementById('sf-toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'sf-toast-container';
+        container.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:90%;max-width:340px;';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.style.cssText = 'background:rgba(255,110,110,0.95);color:#fff;padding:12px 16px;border-radius:12px;font-size:0.85rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);backdrop-filter:blur(12px);pointer-events:auto;animation:sfToastIn 0.3s ease forwards;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
+      toast.innerHTML = '<div style="font-weight:800;font-size:0.8rem;margin-bottom:2px;">' + title + '</div><div style="font-size:0.75rem;opacity:0.9;">' + message + '</div>';
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // Inject toast animation
+    if (!document.getElementById('sf-toast-keyframes')) {
+      const style = document.createElement('style');
+      style.id = 'sf-toast-keyframes';
+      style.textContent = '@keyframes sfToastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}';
+      document.head.appendChild(style);
+    }
 
     // ── 1. Mobile Bottom Navigation Bar ──
     injectBottomNav();
@@ -69,6 +102,9 @@
 
     let panelOpen = false;
     let addonRegistry = getBundledRegistry();
+    let searchQuery = '';
+    let filterType = 'all';
+    let sortBy = 'popular';
 
     function togglePanel() {
       panelOpen = !panelOpen;
@@ -76,9 +112,53 @@
       if (panelOpen) renderPanel();
     }
 
-    // ── 3. Spotify Desktop Panel Watcher (collapses desktop sidebar on mobile) ──
+    // ── 3. Spotify Header & Panels Watcher ──
+    function replaceHeaderLogo() {
+      const logoLink = document.querySelector('#global-nav-bar a[href="/"]') ||
+                       document.querySelector('#global-nav-bar .azTGVyS_7WuUbhEDoCgH a') ||
+                       document.querySelector('.Root__top-bar a[href="/"]');
+      if (logoLink && !logoLink.querySelector('.sf-header-peach-logo')) {
+        logoLink.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <img class="sf-header-peach-logo" src="${PEACH_LOGO_SRC}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; filter:drop-shadow(0 2px 6px rgba(255,110,110,0.5));" alt="SpotiFiak" onerror="this.style.display='none'" />
+            <span style="font-size:16px; font-weight:800; background:linear-gradient(135deg,#ff7a7a,#ffa570); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; letter-spacing:-0.3px;">SpotiFiak</span>
+          </div>
+        `;
+      }
+    }
+
+    function updateRouteState() {
+      const isSearch = window.location.pathname.startsWith('/search');
+      if (isSearch) {
+        if (!document.body.classList.contains('sf-page-search')) {
+          document.body.classList.add('sf-page-search');
+        }
+        setActiveNav('sf-nav-search');
+      } else {
+        if (document.body.classList.contains('sf-page-search')) {
+          document.body.classList.remove('sf-page-search');
+        }
+        if (!document.body.classList.contains('sf-show-library')) {
+          setActiveNav('sf-nav-home');
+        }
+      }
+    }
+
     function watchPanels() {
-      // Find react-resizable-panels used by Spotify Desktop
+      replaceHeaderLogo();
+      updateRouteState();
+
+      // Find Spotify CSS Grid or react-resizable-panels
+      const leftSidebar = document.getElementById('Desktop_LeftSidebar_Id');
+      if (leftSidebar && !leftSidebar.classList.contains('sf-sidebar-panel')) {
+        leftSidebar.classList.add('sf-sidebar-panel');
+      }
+
+      const mainView = document.getElementById('main-view');
+      if (mainView && !mainView.classList.contains('sf-main-panel')) {
+        mainView.classList.add('sf-main-panel');
+      }
+
       const panelGroup = document.querySelector('[data-panel-group]') || document.querySelector('[data-panel-group-id]');
       if (panelGroup) {
         const panels = panelGroup.querySelectorAll(':scope > [data-panel]');
@@ -98,35 +178,45 @@
                            document.querySelector('div[aria-label*="bibliothèque" i]') ||
                            document.querySelector('div[aria-label*="library" i]');
       if (libContainer) {
-        const parentPanel = libContainer.closest('[data-panel]') || libContainer.closest('aside') || libContainer.parentElement;
+        const parentPanel = libContainer.closest('#Desktop_LeftSidebar_Id') || libContainer.closest('[data-panel]') || libContainer.closest('aside') || libContainer.parentElement;
         if (parentPanel && !parentPanel.classList.contains('sf-sidebar-panel')) {
           parentPanel.classList.add('sf-sidebar-panel');
         }
       }
 
       // Fix "Se connecter" button in top bar to prevent 2-line wrap
-      const loginBtns = document.querySelectorAll('button[data-testid="login-button"], a[data-testid="login-button"], header button:not([aria-label])');
+      const loginBtns = document.querySelectorAll('button[data-testid="login-button"], a[data-testid="login-button"]');
       loginBtns.forEach(btn => {
         if (btn.style.whiteSpace !== 'nowrap') {
           btn.style.whiteSpace = 'nowrap';
           btn.style.fontSize = '12px';
-          btn.style.padding = '4px 12px';
-          btn.style.height = '30px';
-          btn.style.minHeight = '30px';
+          btn.style.padding = '4px 14px';
+          btn.style.height = '32px';
+          btn.style.minHeight = '32px';
           btn.style.lineHeight = '1';
         }
       });
     }
 
-    // Run watcher immediately and on every DOM mutation
+    // Run watcher immediately and on every DOM mutation (throttled)
     watchPanels();
-    const panelObserver = new MutationObserver(watchPanels);
+    let watchTimeout = null;
+    const panelObserver = new MutationObserver(() => {
+      if (watchTimeout) return;
+      watchTimeout = setTimeout(() => {
+        watchPanels();
+        watchTimeout = null;
+      }, 150);
+    });
     panelObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Listen to history popstate for route changes
+    window.addEventListener('popstate', updateRouteState);
 
     // Auto-close library drawer when tapping outside or selecting a song/playlist
     document.addEventListener('click', (e) => {
       if (document.body.classList.contains('sf-show-library')) {
-        const isInsideLib = e.target.closest('.sf-sidebar-panel') || e.target.closest('[data-testid="your-library"]');
+        const isInsideLib = e.target.closest('#Desktop_LeftSidebar_Id') || e.target.closest('.sf-sidebar-panel') || e.target.closest('[data-testid="your-library"]');
         const isNavToggle = e.target.closest('#sf-nav-library');
         if (!isInsideLib && !isNavToggle) {
           document.body.classList.remove('sf-show-library');
@@ -142,31 +232,79 @@
 
     function getBundledRegistry() {
       return [
-        { id:'theme-peach-sunset', name:'Peach Sunset 🍑', description:'Thème officiel SpotiFiak aux accents pêche et corail lumineux.', type:'theme', author:'SpotiFiak Team', version:'1.0.0', tags:['peach','coral','glow'], downloads:48200, rating:5.0 },
-        { id:'theme-midnight-wave', name:'Midnight Wave', description:'Thème sombre et élégant avec néons bleu nuit.', type:'theme', author:'SpotiFiak Team', version:'1.0.0', tags:['dark','neon'], downloads:12450, rating:4.8 },
-        { id:'theme-aurora-borealis', name:'Aurora Borealis', description:'Dégradés dynamiques aurore verte et violette.', type:'theme', author:'NightCoder', version:'2.1.0', tags:['gradient','nature'], downloads:8930, rating:4.6 },
-        { id:'theme-retro-synthwave', name:'Retro Synthwave', description:'Esthétique rétro-futuriste 80s néon magenta & cyan.', type:'theme', author:'VaporDev', version:'1.3.0', tags:['retro','80s'], downloads:15200, rating:4.9 },
-        { id:'theme-amoled-black', name:'AMOLED Pure Black', description:'Noir 100% pur pour écran OLED et économie d\'énergie.', type:'theme', author:'OledDev', version:'1.0.0', tags:['amoled','minimal'], downloads:29100, rating:4.9 },
-        { id:'ext-lyrics-plus', name:'Lyrics+', description:'Affichage des paroles synchronisées en temps réel.', type:'extension', author:'LyricsMaster', version:'3.0.0', tags:['lyrics','karaoke'], downloads:25600, rating:4.7 },
-        { id:'ext-visualizer', name:'Audio Visualizer', description:'Spectre visuel animé sur la barre de lecture.', type:'extension', author:'WaveForm', version:'2.0.0', tags:['visualizer','audio'], downloads:18300, rating:4.5 },
-        { id:'ext-sleep-timer', name:'Sleep Timer', description:'Minuteur de sommeil avec fondu doux du volume.', type:'extension', author:'DreamDev', version:'1.5.0', tags:['sleep','timer'], downloads:9800, rating:4.4 },
-        { id:'ext-equalizer', name:'Equalizer Pro', description:'Égaliseur graphique avec presets audio optimisés.', type:'extension', author:'AudioTech', version:'1.8.0', tags:['equalizer','audio'], downloads:11200, rating:4.6 }
+        // ── Thèmes ──
+        { id:'theme-peach-sunset', name:'Peach Sunset', emoji:'🍑', description:'Thème officiel SpotiFiak aux accents pêche et corail lumineux. Couleurs chaleureuses et contrastes doux.', type:'theme', author:'SpotiFiak Team', version:'1.0.0', tags:['peach','coral','glow','officiel'], downloads:48200, rating:5.0, featured:true },
+        { id:'theme-midnight-wave', name:'Midnight Wave', emoji:'🌊', description:'Thème sombre et élégant avec néons bleu nuit. Parfait pour écouter de la musique la nuit.', type:'theme', author:'SpotiFiak Team', version:'1.0.0', tags:['dark','neon','blue'], downloads:12450, rating:4.8 },
+        { id:'theme-aurora-borealis', name:'Aurora Borealis', emoji:'🌌', description:'Dégradés dynamiques aurore verte et violette. Une explosion de couleurs inspirée du ciel nordique.', type:'theme', author:'NightCoder', version:'2.1.0', tags:['gradient','nature','aurora'], downloads:8930, rating:4.6 },
+        { id:'theme-retro-synthwave', name:'Retro Synthwave', emoji:'🕹️', description:'Esthétique rétro-futuriste 80s néon magenta & cyan. Ambiance cyberpunk garantie.', type:'theme', author:'VaporDev', version:'1.3.0', tags:['retro','80s','neon','synthwave'], downloads:15200, rating:4.9 },
+        { id:'theme-amoled-black', name:'AMOLED Pure Black', emoji:'🖤', description:'Noir 100% pur pour écrans OLED. Économie de batterie maximale avec un style minimal.', type:'theme', author:'OledDev', version:'1.0.0', tags:['amoled','minimal','battery'], downloads:29100, rating:4.9 },
+        { id:'theme-forest-green', name:'Forest Green', emoji:'🌲', description:'Palette verte naturelle inspirée de la forêt. Apaisant et rafraîchissant.', type:'theme', author:'NatureDev', version:'1.1.0', tags:['green','nature','calm'], downloads:6700, rating:4.5 },
+        { id:'theme-ocean-depth', name:'Ocean Depth', emoji:'🐋', description:'Bleus profonds et teintes aquatiques. Plongez dans les abysses sonores.', type:'theme', author:'DeepBlue', version:'1.0.0', tags:['ocean','deep','blue'], downloads:5200, rating:4.4 },
+        { id:'theme-candy-pop', name:'Candy Pop', emoji:'🍬', description:'Couleurs vives et fun, rose bonbon et violet néon. Pour les amateurs de kpop et de bonne humeur.', type:'theme', author:'PopStar', version:'1.2.0', tags:['pink','fun','pop','colorful'], downloads:7800, rating:4.7 },
+        // ── Extensions ──
+        { id:'ext-lyrics-plus', name:'Lyrics+', emoji:'🎤', description:'Affichage des paroles synchronisées en temps réel directement dans le lecteur. Compatible avec LRClib et Musixmatch.', type:'extension', author:'LyricsMaster', version:'3.0.0', tags:['lyrics','karaoke','paroles'], downloads:25600, rating:4.7, featured:true },
+        { id:'ext-visualizer', name:'Audio Visualizer', emoji:'📊', description:'Spectre visuel animé sur la barre de lecture. Barres colorées réactives à la musique.', type:'extension', author:'WaveForm', version:'2.0.0', tags:['visualizer','audio','spectrum'], downloads:18300, rating:4.5 },
+        { id:'ext-sleep-timer', name:'Sleep Timer', emoji:'😴', description:'Minuteur de sommeil avec fondu doux du volume. Idéal pour s\'endormir en musique.', type:'extension', author:'DreamDev', version:'1.5.0', tags:['sleep','timer','night'], downloads:9800, rating:4.4 },
+        { id:'ext-equalizer', name:'Equalizer Pro', emoji:'🎛️', description:'Égaliseur graphique 10 bandes avec presets audio optimisés (Bass Boost, Vocal, Concert, etc.).', type:'extension', author:'AudioTech', version:'1.8.0', tags:['equalizer','audio','bass'], downloads:11200, rating:4.6 },
+        { id:'ext-stats-dashboard', name:'Stats Dashboard', emoji:'📈', description:'Statistiques détaillées de vos habitudes d\'écoute. Top artistes, genres, heures d\'écoute.', type:'extension', author:'DataViz', version:'2.0.0', tags:['stats','analytics','data'], downloads:14500, rating:4.6 },
+        { id:'ext-queue-manager', name:'Queue Manager+', emoji:'📋', description:'Gestion avancée de la file d\'attente : réorganiser, supprimer, sauvegarder les queues.', type:'extension', author:'QueueDev', version:'1.3.0', tags:['queue','playlist','manage'], downloads:8900, rating:4.3 },
+        { id:'ext-ad-skipper', name:'Smart Ad Skipper', emoji:'🚫', description:'Détection et passage automatique des interruptions publicitaires. Écoute sans interruption.', type:'extension', author:'AdBlock42', version:'2.5.0', tags:['ads','skip','block'], downloads:52000, rating:4.9, featured:true },
+        { id:'ext-genre-playlists', name:'Genre Explorer', emoji:'🗺️', description:'Explorez la musique par genre avec des playlists auto-générées selon vos goûts.', type:'extension', author:'DiscoverDev', version:'1.0.0', tags:['genre','discover','explore'], downloads:4200, rating:4.2 },
       ];
+    }
+
+    function getFilteredAddons() {
+      let items = addonRegistry.slice();
+
+      // Filter by type
+      if (filterType !== 'all') {
+        items = items.filter(a => a.type === filterType);
+      }
+
+      // Filter by search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        items = items.filter(a =>
+          a.name.toLowerCase().includes(q) ||
+          a.description.toLowerCase().includes(q) ||
+          a.author.toLowerCase().includes(q) ||
+          a.tags.some(t => t.toLowerCase().includes(q))
+        );
+      }
+
+      // Sort
+      switch (sortBy) {
+        case 'popular': items.sort((a, b) => b.downloads - a.downloads); break;
+        case 'rating': items.sort((a, b) => b.rating - a.rating); break;
+        case 'name': items.sort((a, b) => a.name.localeCompare(b.name)); break;
+        case 'newest': items.sort((a, b) => b.version.localeCompare(a.version)); break;
+      }
+
+      return items;
+    }
+
+    function formatDownloads(n) {
+      if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      return n.toString();
     }
 
     function renderPanel() {
       const installedCount = Object.keys(installedAddons).length;
+      const totalAddons = addonRegistry.length;
+      const themeCount = addonRegistry.filter(a => a.type === 'theme').length;
+      const extCount = addonRegistry.filter(a => a.type === 'extension').length;
+
       panel.innerHTML = `
         <div style="padding: 18px 16px 0; padding-top: max(18px, env(safe-area-inset-top));">
           <!-- Header with Peach Branding -->
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
             <div style="display:flex; align-items:center; gap:12px;">
-              <img src="file:///android_asset/img/peach-logo.png" style="width:42px; height:42px; border-radius:50%; box-shadow:0 4px 16px rgba(255,110,110,0.4);" alt="SpotiFiak" onerror="this.outerHTML='<span style=\'font-size:24px;\'>🍑</span>'" />
+              <img src="${PEACH_LOGO_SRC}" style="width:42px; height:42px; border-radius:50%; box-shadow:0 4px 16px rgba(255,110,110,0.4);" alt="SpotiFiak" onerror="this.style.display='none'" />
               <div>
                 <h1 style="margin:0; font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#ff6e6e,#ffa07a); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
                   SpotiFiak
                 </h1>
-                <p style="margin:2px 0 0; font-size:0.75rem; color:#a0a0b0;">Spicetify Mobile • Personnalisation Spotify</p>
+                <p style="margin:2px 0 0; font-size:0.72rem; color:#a0a0b0;">Spicetify Mobile • ${totalAddons} addons • ${installedCount} installé${installedCount > 1 ? 's' : ''}</p>
               </div>
             </div>
             <button id="sf-close-btn" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.08); border:none; color:#ffffff; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
@@ -174,23 +312,77 @@
             </button>
           </div>
 
-          <!-- Navigation Tabs -->
-          <div id="sf-tabs" style="display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none;">
-            <button class="sf-tab sf-tab-active" data-tab="themes" style="${tabStyle(true)}">🎨 Thèmes</button>
-            <button class="sf-tab" data-tab="extensions" style="${tabStyle(false)}">🧩 Extensions</button>
-            <button class="sf-tab" data-tab="custom-css" style="${tabStyle(false)}">✏️ CSS Perso</button>
-            <button class="sf-tab" data-tab="settings" style="${tabStyle(false)}">⚙️ Réglages</button>
+          <!-- Search Bar -->
+          <div style="position:relative; margin-bottom:12px;">
+            <input id="sf-search-input" type="text" placeholder="🔍 Rechercher thèmes, extensions, auteurs..." value="${searchQuery}" style="width:100%; height:40px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#fff; font-size:0.85rem; padding:0 16px 0 16px; box-sizing:border-box; outline:none; font-family:inherit; transition:border-color 0.2s;" />
+          </div>
+
+          <!-- Filter Pills -->
+          <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+            <button class="sf-filter-pill" data-filter="all" style="${filterPillStyle('all')}">Tout (${totalAddons})</button>
+            <button class="sf-filter-pill" data-filter="theme" style="${filterPillStyle('theme')}">🎨 Thèmes (${themeCount})</button>
+            <button class="sf-filter-pill" data-filter="extension" style="${filterPillStyle('extension')}">🧩 Extensions (${extCount})</button>
+          </div>
+
+          <!-- Sort + Navigation Tabs -->
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <div id="sf-tabs" style="display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; flex:1;">
+              <button class="sf-tab sf-tab-active" data-tab="marketplace" style="${tabStyle(true)}">🏪 Boutique</button>
+              <button class="sf-tab" data-tab="installed" style="${tabStyle(false)}">📦 Installés</button>
+              <button class="sf-tab" data-tab="custom-css" style="${tabStyle(false)}">✏️ CSS</button>
+              <button class="sf-tab" data-tab="settings" style="${tabStyle(false)}">⚙️ Réglages</button>
+            </div>
+            <select id="sf-sort-select" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#a0a0b0;font-size:0.72rem;padding:4px 8px;outline:none;cursor:pointer;margin-left:6px;">
+              <option value="popular" ${sortBy==='popular'?'selected':''}>📈 Populaires</option>
+              <option value="rating" ${sortBy==='rating'?'selected':''}>⭐ Notes</option>
+              <option value="name" ${sortBy==='name'?'selected':''}>🔤 A-Z</option>
+              <option value="newest" ${sortBy==='newest'?'selected':''}>🆕 Récents</option>
+            </select>
           </div>
         </div>
 
         <!-- Content Area -->
         <div id="sf-tab-content" style="padding: 0 16px 120px;">
-          ${renderThemes()}
+          ${renderMarketplace()}
         </div>
       `;
 
+      // Bind close button
       document.getElementById('sf-close-btn').addEventListener('click', togglePanel);
 
+      // Bind search
+      const searchInput = document.getElementById('sf-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          searchQuery = e.target.value;
+          updateTabContent();
+        });
+        searchInput.addEventListener('focus', () => {
+          searchInput.style.borderColor = 'rgba(255,110,110,0.5)';
+        });
+        searchInput.addEventListener('blur', () => {
+          searchInput.style.borderColor = 'rgba(255,255,255,0.1)';
+        });
+      }
+
+      // Bind filter pills
+      panel.querySelectorAll('.sf-filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          filterType = pill.dataset.filter;
+          renderPanel();
+        });
+      });
+
+      // Bind sort
+      const sortSelect = document.getElementById('sf-sort-select');
+      if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+          sortBy = e.target.value;
+          updateTabContent();
+        });
+      }
+
+      // Bind tab navigation
       panel.querySelectorAll('.sf-tab').forEach(tab => {
         tab.addEventListener('click', () => {
           panel.querySelectorAll('.sf-tab').forEach(t => {
@@ -203,80 +395,173 @@
           tab.style.color = '#ff6e6e';
           tab.style.borderColor = 'rgba(255,110,110,0.4)';
           tab.classList.add('sf-tab-active');
-
-          const content = panel.querySelector('#sf-tab-content');
-          switch(tab.dataset.tab) {
-            case 'themes': content.innerHTML = renderThemes(); break;
-            case 'extensions': content.innerHTML = renderExtensions(); break;
-            case 'custom-css': content.innerHTML = renderCustomCSS(); break;
-            case 'settings': content.innerHTML = renderSettings(); break;
-          }
-          bindActions();
+          updateTabContent(tab.dataset.tab);
         });
       });
 
       bindActions();
     }
 
+    function updateTabContent(tabId) {
+      const activeTab = tabId || panel.querySelector('.sf-tab-active')?.dataset?.tab || 'marketplace';
+      const content = panel.querySelector('#sf-tab-content');
+      if (!content) return;
+
+      switch(activeTab) {
+        case 'marketplace': content.innerHTML = renderMarketplace(); break;
+        case 'installed': content.innerHTML = renderInstalled(); break;
+        case 'custom-css': content.innerHTML = renderCustomCSS(); break;
+        case 'settings': content.innerHTML = renderSettings(); break;
+      }
+      bindActions();
+    }
+
+    function filterPillStyle(type) {
+      const active = filterType === type;
+      return `padding:6px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid ${active ? 'rgba(255,110,110,0.4)' : 'transparent'};background:${active ? 'rgba(255,110,110,0.15)' : 'rgba(255,255,255,0.04)'};color:${active ? '#ff6e6e' : '#8e8e9f'};transition:all 0.2s ease;font-family:inherit;`;
+    }
+
     function tabStyle(active) {
       return `
-        padding: 8px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+        padding: 7px 12px; border-radius: 18px; font-size: 0.78rem; font-weight: 600;
         cursor: pointer; white-space: nowrap; border: 1px solid ${active ? 'rgba(255,110,110,0.4)' : 'transparent'};
         background: ${active ? 'rgba(255,110,110,0.15)' : 'rgba(255,255,255,0.06)'};
-        color: ${active ? '#ff6e6e' : '#a0a0b0'}; transition: all 0.2s ease;
+        color: ${active ? '#ff6e6e' : '#a0a0b0'}; transition: all 0.2s ease; font-family: inherit;
       `;
     }
 
-    function renderThemes() {
-      const themes = addonRegistry.filter(a => a.type === 'theme');
-      const activeTheme = SF.getStorage('active_theme_id', 'theme-peach-sunset');
+    function renderMarketplace() {
+      const items = getFilteredAddons();
 
-      return `
-        <div style="margin-bottom:12px; font-size:0.85rem; color:#888;">
-          Sélectionnez un thème pour transformer instantanément l'apparence de Spotify :
-        </div>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          ${themes.map(t => {
-            const isActive = activeTheme === t.id;
-            return `
-              <div style="background:rgba(25,27,38,0.7); border:1px solid ${isActive ? '#ff6e6e' : 'rgba(255,255,255,0.08)'}; border-radius:14px; padding:14px; display:flex; align-items:center; justify-content:space-between; box-shadow:${isActive ? '0 0 16px rgba(255,110,110,0.2)' : 'none'};">
-                <div style="max-width:70%;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-weight:700; font-size:0.95rem; color:white;">${t.name}</span>
-                    ${isActive ? '<span style="background:#ff6e6e; color:#0c0d14; font-size:0.65rem; font-weight:800; padding:2px 6px; border-radius:6px;">ACTIF</span>' : ''}
-                  </div>
-                  <div style="font-size:0.75rem; color:#9a9ab0; margin-top:3px;">${t.description}</div>
-                  <div style="font-size:0.68rem; color:#606070; margin-top:4px;">Par ${t.author} • ⭐ ${t.rating}</div>
-                </div>
-                <button class="sf-action-btn" data-action="apply-theme" data-id="${t.id}" style="padding:8px 16px; border-radius:18px; border:none; font-weight:700; font-size:0.8rem; cursor:pointer; background:${isActive ? 'rgba(255,255,255,0.1)' : '#ff6e6e'}; color:${isActive ? '#fff' : '#0c0d14'};">
-                  ${isActive ? 'Réappliquer' : 'Appliquer'}
-                </button>
+      if (items.length === 0) {
+        return `
+          <div style="text-align:center; padding:40px 20px; color:#606070;">
+            <div style="font-size:2.5rem; margin-bottom:12px;">🔍</div>
+            <div style="font-size:0.9rem; font-weight:600; color:#8e8e9f;">Aucun résultat</div>
+            <div style="font-size:0.78rem; margin-top:6px;">Essayez un autre mot-clé ou changez les filtres.</div>
+          </div>
+        `;
+      }
+
+      // Featured section (only on initial view with no search)
+      let featuredHtml = '';
+      if (!searchQuery.trim() && filterType === 'all') {
+        const featured = addonRegistry.filter(a => a.featured);
+        if (featured.length > 0) {
+          featuredHtml = `
+            <div style="margin-bottom:16px;">
+              <div style="font-size:0.85rem; font-weight:700; color:#fff; margin-bottom:8px;">⭐ Mis en avant</div>
+              <div style="display:flex; gap:10px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding-bottom:4px;">
+                ${featured.map(a => {
+                  const isInstalled = !!installedAddons[a.id];
+                  return `
+                    <div style="min-width:220px; background:linear-gradient(135deg,rgba(255,110,110,0.15),rgba(255,160,122,0.08)); border:1px solid rgba(255,110,110,0.25); border-radius:16px; padding:14px; flex-shrink:0;">
+                      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                        <span style="font-size:1.4rem;">${a.emoji || ''}</span>
+                        <div>
+                          <div style="font-weight:700; font-size:0.9rem; color:white;">${a.name}</div>
+                          <div style="font-size:0.68rem; color:#a0a0b0;">${a.author} • v${a.version}</div>
+                        </div>
+                      </div>
+                      <div style="font-size:0.73rem; color:#9a9ab0; margin-bottom:10px; line-height:1.4;">${a.description.substring(0, 80)}${a.description.length > 80 ? '...' : ''}</div>
+                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:0.68rem; color:#606070;">📥 ${formatDownloads(a.downloads)} • ⭐ ${a.rating}</div>
+                        <button class="sf-action-btn" data-action="${a.type === 'theme' ? 'apply-theme' : 'toggle-ext'}" data-id="${a.id}" style="padding:6px 12px; border-radius:14px; border:none; font-weight:700; font-size:0.72rem; cursor:pointer; background:${isInstalled ? 'rgba(34,197,94,0.2)' : '#ff6e6e'}; color:${isInstalled ? '#22c55e' : '#0c0d14'}; font-family:inherit;">
+                          ${isInstalled ? '✓' : 'Installer'}
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
               </div>
-            `;
-          }).join('')}
+            </div>
+          `;
+        }
+      }
+
+      return `
+        ${featuredHtml}
+        <div style="font-size:0.8rem; color:#606070; margin-bottom:10px;">${items.length} résultat${items.length > 1 ? 's' : ''}</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          ${items.map(a => renderAddonCard(a)).join('')}
         </div>
       `;
     }
 
-    function renderExtensions() {
-      const exts = addonRegistry.filter(a => a.type === 'extension');
+    function renderAddonCard(a) {
+      const isInstalled = !!installedAddons[a.id];
+      const isTheme = a.type === 'theme';
+      const activeTheme = SF.getStorage('active_theme_id', 'theme-peach-sunset');
+      const isActive = isTheme && activeTheme === a.id;
+
       return `
-        <div style="margin-bottom:12px; font-size:0.85rem; color:#888;">
-          Activez ou désactivez les extensions Spicetify Mobile en un clic :
+        <div style="background:rgba(25,27,38,0.7); border:1px solid ${isActive ? '#ff6e6e' : 'rgba(255,255,255,0.06)'}; border-radius:14px; padding:14px; display:flex; align-items:flex-start; gap:12px; box-shadow:${isActive ? '0 0 16px rgba(255,110,110,0.15)' : 'none'}; transition:all 0.2s;">
+          <div style="font-size:1.6rem; width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.04); border-radius:10px; flex-shrink:0;">${a.emoji || (isTheme ? '🎨' : '🧩')}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span style="font-weight:700; font-size:0.92rem; color:white;">${a.name}</span>
+              ${isActive ? '<span style="background:#ff6e6e; color:#0c0d14; font-size:0.6rem; font-weight:800; padding:2px 6px; border-radius:6px;">ACTIF</span>' : ''}
+              ${a.featured ? '<span style="background:rgba(255,215,0,0.15); color:#ffd700; font-size:0.6rem; font-weight:800; padding:2px 6px; border-radius:6px;">★</span>' : ''}
+              <span style="background:rgba(255,255,255,0.06); color:#8e8e9f; font-size:0.6rem; font-weight:600; padding:2px 6px; border-radius:6px;">${isTheme ? 'Thème' : 'Extension'}</span>
+            </div>
+            <div style="font-size:0.75rem; color:#9a9ab0; margin-top:4px; line-height:1.4;">${a.description}</div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap;">
+              <span style="font-size:0.68rem; color:#606070;">Par ${a.author}</span>
+              <span style="font-size:0.68rem; color:#606070;">v${a.version}</span>
+              <span style="font-size:0.68rem; color:#606070;">📥 ${formatDownloads(a.downloads)}</span>
+              <span style="font-size:0.68rem; color:#ffd700;">⭐ ${a.rating}</span>
+            </div>
+            <div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">
+              ${a.tags.slice(0, 4).map(t => '<span style="background:rgba(255,255,255,0.04);color:#7a7a90;font-size:0.62rem;padding:2px 6px;border-radius:8px;">#' + t + '</span>').join('')}
+            </div>
+          </div>
+          <button class="sf-action-btn" data-action="${isTheme ? 'apply-theme' : 'toggle-ext'}" data-id="${a.id}" style="padding:8px 14px; border-radius:16px; border:none; font-weight:700; font-size:0.78rem; cursor:pointer; background:${isActive ? 'rgba(255,255,255,0.1)' : isInstalled ? 'rgba(34,197,94,0.2)' : '#ff6e6e'}; color:${isActive ? '#fff' : isInstalled ? '#22c55e' : '#0c0d14'}; flex-shrink:0; font-family:inherit; white-space:nowrap;">
+            ${isActive ? 'Réappliquer' : isInstalled ? 'Activé ✓' : isTheme ? 'Appliquer' : 'Activer'}
+          </button>
+        </div>
+      `;
+    }
+
+    function renderInstalled() {
+      const installedIds = Object.keys(installedAddons);
+      if (installedIds.length === 0) {
+        return `
+          <div style="text-align:center; padding:40px 20px; color:#606070;">
+            <div style="font-size:2.5rem; margin-bottom:12px;">📦</div>
+            <div style="font-size:0.9rem; font-weight:600; color:#8e8e9f;">Aucun addon installé</div>
+            <div style="font-size:0.78rem; margin-top:6px;">Parcourez la boutique pour installer des thèmes et extensions.</div>
+          </div>
+        `;
+      }
+
+      const installed = addonRegistry.filter(a => installedIds.includes(a.id));
+      return `
+        <div style="font-size:0.85rem; color:#888; margin-bottom:12px;">
+          ${installed.length} addon${installed.length > 1 ? 's' : ''} installé${installed.length > 1 ? 's' : ''} :
         </div>
         <div style="display:flex; flex-direction:column; gap:10px;">
-          ${exts.map(e => {
-            const isInstalled = !!installedAddons[e.id];
+          ${installed.map(a => {
+            const isTheme = a.type === 'theme';
+            const activeTheme = SF.getStorage('active_theme_id', 'theme-peach-sunset');
+            const isActive = isTheme && activeTheme === a.id;
             return `
-              <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:14px; display:flex; align-items:center; justify-content:space-between;">
-                <div style="max-width:72%;">
-                  <div style="font-weight:700; font-size:0.95rem; color:white;">${e.name}</div>
-                  <div style="font-size:0.75rem; color:#9a9ab0; margin-top:3px;">${e.description}</div>
-                  <div style="font-size:0.68rem; color:#606070; margin-top:4px;">Par ${e.author} • ⭐ ${e.rating}</div>
+              <div style="background:rgba(25,27,38,0.7); border:1px solid ${isActive ? '#ff6e6e' : 'rgba(255,255,255,0.06)'}; border-radius:14px; padding:14px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                  <span style="font-size:1.3rem;">${a.emoji || ''}</span>
+                  <div style="min-width:0;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span style="font-weight:700; font-size:0.9rem; color:white;">${a.name}</span>
+                      ${isActive ? '<span style="background:#ff6e6e;color:#0c0d14;font-size:0.6rem;font-weight:800;padding:2px 6px;border-radius:6px;">ACTIF</span>' : ''}
+                    </div>
+                    <div style="font-size:0.72rem; color:#606070; margin-top:2px;">${a.author} • v${a.version}</div>
+                  </div>
                 </div>
-                <button class="sf-action-btn" data-action="toggle-ext" data-id="${e.id}" style="padding:8px 14px; border-radius:18px; border:none; font-weight:700; font-size:0.78rem; cursor:pointer; background:${isInstalled ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.1)'}; color:${isInstalled ? '#22c55e' : '#fff'};">
-                  ${isInstalled ? 'Activé ✓' : 'Activer'}
-                </button>
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                  ${isTheme ? '<button class="sf-action-btn" data-action="apply-theme" data-id="' + a.id + '" style="padding:6px 12px;border-radius:12px;border:none;font-weight:700;font-size:0.72rem;cursor:pointer;background:' + (isActive ? 'rgba(255,255,255,0.1)' : '#ff6e6e') + ';color:' + (isActive ? '#fff' : '#0c0d14') + ';font-family:inherit;">' + (isActive ? 'Actif' : 'Appliquer') + '</button>' : ''}
+                  <button class="sf-action-btn" data-action="uninstall" data-id="${a.id}" style="padding:6px 12px;border-radius:12px;border:none;font-weight:700;font-size:0.72rem;cursor:pointer;background:rgba(239,68,68,0.15);color:#ef4444;font-family:inherit;">
+                    Retirer
+                  </button>
+                </div>
               </div>
             `;
           }).join('')}
@@ -292,12 +577,20 @@
         </div>
         <textarea id="sf-custom-css-input" placeholder="/* Entrez votre CSS Spicetify ici... */\nbody { filter: contrast(105%); }" style="width:100%; height:200px; background:#12131b; border:1px solid rgba(255,110,110,0.3); border-radius:12px; color:#e0e0e0; font-family:monospace; font-size:12px; padding:12px; box-sizing:border-box; outline:none; resize:none;">${currentCSS}</textarea>
         <div style="display:flex; gap:10px; margin-top:10px;">
-          <button id="sf-save-custom-css" style="flex:1; padding:10px; border-radius:12px; background:#ff6e6e; border:none; color:#0c0d14; font-weight:700; cursor:pointer;">
+          <button id="sf-save-custom-css" style="flex:1; padding:10px; border-radius:12px; background:#ff6e6e; border:none; color:#0c0d14; font-weight:700; cursor:pointer; font-family:inherit;">
             Sauvegarder & Injecter
           </button>
-          <button id="sf-clear-custom-css" style="padding:10px 16px; border-radius:12px; background:rgba(255,255,255,0.08); border:none; color:#aaa; font-weight:600; cursor:pointer;">
+          <button id="sf-clear-custom-css" style="padding:10px 16px; border-radius:12px; background:rgba(255,255,255,0.08); border:none; color:#aaa; font-weight:600; cursor:pointer; font-family:inherit;">
             Effacer
           </button>
+        </div>
+        <div style="margin-top:16px;">
+          <div style="font-size:0.8rem; font-weight:700; color:#fff; margin-bottom:8px;">💡 Snippets rapides</div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <button class="sf-snippet-btn" data-css="body { filter: saturate(120%) !important; }" style="text-align:left;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;color:#9a9ab0;font-size:0.75rem;cursor:pointer;font-family:monospace;">🎨 Saturation +20%</button>
+            <button class="sf-snippet-btn" data-css="body { filter: contrast(110%) brightness(95%) !important; }" style="text-align:left;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;color:#9a9ab0;font-size:0.75rem;cursor:pointer;font-family:monospace;">🔲 Contraste amélioré</button>
+            <button class="sf-snippet-btn" data-css=".main-card-card { border-radius: 20px !important; }" style="text-align:left;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;color:#9a9ab0;font-size:0.75rem;cursor:pointer;font-family:monospace;">🟠 Cartes ultra-rondes</button>
+          </div>
         </div>
       `;
     }
@@ -306,18 +599,32 @@
       return `
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
-            <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">Affichage Mobile Optimisé</div>
+            <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">📱 Affichage Mobile Optimisé</div>
             <div style="font-size:0.75rem; color:#888; margin-bottom:12px;">Adapte Spotify Desktop sur écran de téléphone (plein écran, barre de navigation tactile).</div>
-            <button id="sf-toggle-library" style="padding:8px 14px; border-radius:10px; background:rgba(255,110,110,0.2); border:1px solid rgba(255,110,110,0.4); color:#ff6e6e; font-weight:700; font-size:0.8rem; cursor:pointer;">
+            <button id="sf-toggle-library" style="padding:8px 14px; border-radius:10px; background:rgba(255,110,110,0.2); border:1px solid rgba(255,110,110,0.4); color:#ff6e6e; font-weight:700; font-size:0.8rem; cursor:pointer; font-family:inherit;">
               Ouvrir / Fermer le tiroir Bibliothèque
             </button>
           </div>
 
           <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
-            <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">À propos de SpotiFiak</div>
-            <div style="font-size:0.78rem; color:#a0a0b0; line-height:1.5;">
-              SpotiFiak v1.1.0 • Client Spicetify Mobile pour Android.<br/>
-              Inspiré de l'architecture WebView et MediaSession, avec gestion complète des thèmes et extensions.
+            <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">🔄 Réinitialiser</div>
+            <div style="font-size:0.75rem; color:#888; margin-bottom:12px;">Remet tous les paramètres à leurs valeurs d'origine.</div>
+            <button id="sf-reset-all" style="padding:8px 14px; border-radius:10px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#ef4444; font-weight:700; font-size:0.8rem; cursor:pointer; font-family:inherit;">
+              Tout réinitialiser
+            </button>
+          </div>
+
+          <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
+            <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">ℹ️ À propos de SpotiFiak</div>
+            <div style="font-size:0.78rem; color:#a0a0b0; line-height:1.6;">
+              SpotiFiak v1.2.0 • Client Spicetify Mobile pour Android.<br/>
+              Inspiré de l'architecture WebView de SpotiDuck, avec gestion complète des thèmes et extensions.<br/><br/>
+              <span style="color:#606070;">
+                📜 Ce projet est open-source sous licence MIT.<br/>
+                ⚠️ Non affilié à Spotify AB. Usage éducatif uniquement.<br/>
+                🔒 Aucune donnée personnelle n'est collectée.<br/>
+                🍑 Fait avec ❤️ par SatanMerde
+              </span>
             </div>
           </div>
         </div>
@@ -330,6 +637,10 @@
         btn.addEventListener('click', () => {
           const themeId = btn.dataset.id;
           applyTheme(themeId);
+          if (!installedAddons[themeId]) {
+            installedAddons[themeId] = { enabled: true, date: Date.now() };
+            SF.setStorage('installed_addons', installedAddons);
+          }
           renderPanel();
         });
       });
@@ -339,6 +650,19 @@
         btn.addEventListener('click', () => {
           const extId = btn.dataset.id;
           toggleExtension(extId);
+          renderPanel();
+        });
+      });
+
+      // Uninstall buttons
+      panel.querySelectorAll('[data-action="uninstall"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          delete installedAddons[id];
+          SF.setStorage('installed_addons', installedAddons);
+          SF.removeCSS('ext-' + id);
+          SF.removeCSS('active-theme');
+          SF.showNotification('Addon retiré', id);
           renderPanel();
         });
       });
@@ -357,12 +681,23 @@
       const clearCssBtn = document.getElementById('sf-clear-custom-css');
       if (clearCssBtn) {
         clearCssBtn.addEventListener('click', () => {
-          document.getElementById('sf-custom-css-input').value = '';
+          const input = document.getElementById('sf-custom-css-input');
+          if (input) input.value = '';
           SF.setStorage('custom_user_css', '');
           SF.removeCSS('user-custom');
           SF.showNotification('CSS Réinitialisé', 'Le style personnalisé a été retiré.');
         });
       }
+
+      // Snippet buttons
+      panel.querySelectorAll('.sf-snippet-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = document.getElementById('sf-custom-css-input');
+          if (input) {
+            input.value = (input.value ? input.value + '\n' : '') + btn.dataset.css;
+          }
+        });
+      });
 
       // Drawer toggle
       const toggleLibBtn = document.getElementById('sf-toggle-library');
@@ -370,6 +705,21 @@
         toggleLibBtn.addEventListener('click', () => {
           document.body.classList.toggle('sf-show-library');
           togglePanel();
+        });
+      }
+
+      // Reset all
+      const resetBtn = document.getElementById('sf-reset-all');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          SF.setStorage('active_theme_id', 'theme-peach-sunset');
+          SF.setStorage('installed_addons', { 'theme-peach-sunset': { enabled: true, date: Date.now() } });
+          SF.setStorage('custom_user_css', '');
+          SF.removeCSS('user-custom');
+          installedAddons = { 'theme-peach-sunset': { enabled: true, date: Date.now() } };
+          applyTheme('theme-peach-sunset');
+          SF.showNotification('Réinitialisé', 'Tous les paramètres ont été réinitialisés.');
+          renderPanel();
         });
       }
     }
@@ -402,13 +752,27 @@
           body, [data-testid="root"], div[data-testid="main-view"], .Root__now-playing-bar { background: #000000 !important; color: #ffffff !important; }
           [data-testid="control-button-playpause"], button[data-testid="play-button"] { background-color: #ffffff !important; color:#000!important; }
           .main-card-card { background: #070707 !important; border: 1px solid #1c1c1c !important; }
+        `,
+        'theme-forest-green': `
+          body, [data-testid="root"], div[data-testid="main-view"] { background: #0a1a0a !important; color: #d4edda !important; }
+          [data-testid="control-button-playpause"], button[data-testid="play-button"] { background-color: #2d6a4f !important; color:#d4edda!important; box-shadow:0 4px 18px rgba(45,106,79,0.4)!important; }
+          .main-card-card { border: 1px solid rgba(45,106,79,0.2) !important; background: rgba(10,26,10,0.7) !important; }
+        `,
+        'theme-ocean-depth': `
+          body, [data-testid="root"], div[data-testid="main-view"] { background: #020617 !important; color: #e0f7fa !important; }
+          [data-testid="control-button-playpause"], button[data-testid="play-button"] { background-color: #0284c7 !important; color:#fff!important; box-shadow:0 4px 18px rgba(2,132,199,0.4)!important; }
+        `,
+        'theme-candy-pop': `
+          body, [data-testid="root"], div[data-testid="main-view"] { background: #1a0a1a !important; color: #fce4ec !important; }
+          [data-testid="control-button-playpause"], button[data-testid="play-button"] { background-color: #ec407a !important; color:#fff!important; box-shadow:0 4px 18px rgba(236,64,122,0.5)!important; }
+          .main-card-card { border: 1px solid rgba(236,64,122,0.2) !important; }
         `
       };
 
       if (themeStyles[themeId]) {
         SF.injectCSS('active-theme', themeStyles[themeId]);
       }
-      SF.showNotification('Thème Appliqué', 'Thème activé avec succès !');
+      SF.showNotification('Thème Appliqué', addonRegistry.find(a => a.id === themeId)?.name || themeId);
     }
 
     function toggleExtension(extId) {
@@ -443,35 +807,45 @@
           Bibliothèque
         </button>
         <button class="sf-nav-item sf-nav-item-peach" id="sf-nav-spicetify">
-          <img src="file:///android_asset/img/peach-logo.png" style="width:22px; height:22px; border-radius:50%; margin-bottom:2px;" alt="Spicetify" onerror="this.outerHTML='<span style=\'font-size:20px; line-height:1;\'>🍑</span>'" />
+          <img src="${PEACH_LOGO_SRC}" style="width:22px; height:22px; border-radius:50%; margin-bottom:2px;" alt="Spicetify" onerror="this.outerHTML='<span style=\\'font-size:20px; line-height:1;\\'>🍑</span>'" />
           Spicetify
         </button>
       `;
 
       document.body.appendChild(nav);
 
-      document.getElementById('sf-nav-home').addEventListener('click', () => {
+      document.getElementById('sf-nav-home').addEventListener('click', (e) => {
+        e.preventDefault();
         setActiveNav('sf-nav-home');
         document.body.classList.remove('sf-show-library');
+        document.body.classList.remove('sf-page-search');
         const homeBtn = document.querySelector('a[href="/"]') || document.querySelector('[data-testid="home-button"]');
         if (homeBtn) homeBtn.click();
-        else window.location.href = 'https://open.spotify.com/';
+        else if (window.location.pathname !== '/') window.location.href = 'https://open.spotify.com/';
       });
 
-      document.getElementById('sf-nav-search').addEventListener('click', () => {
+      document.getElementById('sf-nav-search').addEventListener('click', (e) => {
+        e.preventDefault();
         setActiveNav('sf-nav-search');
         document.body.classList.remove('sf-show-library');
+        document.body.classList.add('sf-page-search');
         const searchBtn = document.querySelector('a[href="/search"]') || document.querySelector('[data-testid="search-button"]');
         if (searchBtn) searchBtn.click();
-        else window.location.href = 'https://open.spotify.com/search';
+        else if (!window.location.pathname.startsWith('/search')) window.location.href = 'https://open.spotify.com/search';
+        setTimeout(() => {
+          const input = document.querySelector('#global-nav-bar input[data-testid="search-input"]') || document.querySelector('input[data-testid="search-input"]');
+          if (input) input.focus();
+        }, 300);
       });
 
-      document.getElementById('sf-nav-library').addEventListener('click', () => {
+      document.getElementById('sf-nav-library').addEventListener('click', (e) => {
+        e.preventDefault();
         setActiveNav('sf-nav-library');
         document.body.classList.toggle('sf-show-library');
       });
 
-      document.getElementById('sf-nav-spicetify').addEventListener('click', () => {
+      document.getElementById('sf-nav-spicetify').addEventListener('click', (e) => {
+        e.preventDefault();
         togglePanel();
       });
     }
