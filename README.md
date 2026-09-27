@@ -13,8 +13,8 @@
 
 <br/>
 
-<a href="https://github.com/SatanMerde/SpotiFiak/releases/download/v1.1.0/SpotiFiak.apk">
-  <img src="https://img.shields.io/badge/📥_TÉLÉCHARGER_L'APK-SpotiFiak_v1.1.0-FF6E6E?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Télécharger SpotiFiak APK" />
+<a href="https://github.com/SatanMerde/SpotiFiak/releases/latest/download/SpotiFiak.apk">
+  <img src="https://img.shields.io/badge/📥_TÉLÉCHARGER_L'APK-SpotiFiak_v1.2.0-FF6E6E?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Télécharger SpotiFiak APK" />
 </a>
 
 <br/><br/>
