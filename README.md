@@ -8,6 +8,8 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/SatanMerde/SpotiFiak?color=FF6E6E&style=for-the-badge&logo=github)](https://github.com/SatanMerde/SpotiFiak/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/SatanMerde/SpotiFiak/build-apk.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/SatanMerde/SpotiFiak/actions)
+[![Statut](https://img.shields.io/badge/Statut-En%20D%C3%A9veloppement%20Actif%20%F0%9F%9A%A7-orange?style=for-the-badge&logo=git)](https://github.com/SatanMerde/SpotiFiak)
+[![Stade](https://img.shields.io/badge/Stade-Alpha%20%2F%20WIP-yellow?style=for-the-badge)](https://github.com/SatanMerde/SpotiFiak)
 [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SatanMerde/SpotiFiak/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
@@ -25,6 +27,7 @@
 
 <p align="center">
   <a href="#-présentation">Présentation</a> •
+  <a href="#-statut-du-projet">Statut du Projet</a> •
   <a href="#-architecture-façon-spotiduck">Architecture</a> •
   <a href="#-fonctionnalités-clés">Fonctionnalités</a> •
   <a href="#-addons-inclus">Addons Inclus</a> •
@@ -34,6 +37,15 @@
 </p>
 
 </div>
+
+---
+
+> [!IMPORTANT]
+> 🚧 **PROJET EN COURS DE DÉVELOPPEMENT ACTIF (WORK IN PROGRESS / ALPHA)**  
+> **SpotiFiak** est actuellement en phase de **développement actif** et évolue au quotidien :
+> - ⚡ **Mises à jour régulières** : De nombreuses optimisations pour le lecteur mobile, la compatibilité tactile et les extensions Spicetify sont déployées en continu.
+> - 🔄 **Mise à jour directe in-app** : Inutile de réinstaller manuellement l'APK à chaque version, l'application se met à jour en 1 clic depuis l'onglet **⚙️ Réglages**.
+> - 💬 **Retours bienvenus** : Des comportements inattendus ou des décalages d'interface peuvent subsister sur certains appareils. Merci de signaler vos retours et anomalies sur l'onglet **[Issues](https://github.com/SatanMerde/SpotiFiak/issues)** !
 
 ---
 
@@ -135,7 +147,7 @@ Spicetify.Player.addEventListener('songchange', (event) => {
 
 ### Télécharger l'APK
 1. Téléchargez la dernière version depuis la page des **[Releases GitHub](https://github.com/SatanMerde/SpotiFiak/releases)** ou via le lien direct :  
-   👉 **[Télécharger SpotiFiak.apk](https://github.com/SatanMerde/SpotiFiak/releases/download/v1.0.0/SpotiFiak.apk)**
+   👉 **[Télécharger SpotiFiak.apk (Dernière Version)](https://github.com/SatanMerde/SpotiFiak/releases/latest/download/SpotiFiak.apk)**
 2. Ouvrez le fichier téléchargé sur votre smartphone Android.
 3. Activez l'installation depuis des sources inconnues si Android vous le demande.
 4. Lancez **SpotiFiak** et profitez de l'expérience !

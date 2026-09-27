@@ -72,6 +72,8 @@ jobs:
           body: |
             ## 🍑 SpotiFiak ${{ env.TAG }} — Spicetify Mobile APK
 
+            > 🚧 **Note importante** : SpotiFiak est un projet en cours de **développement actif** (Work in progress / Alpha). Les améliorations et correctifs sont fréquents et s'installent directement depuis l'application (⚙️ Réglages).
+
             Téléchargez **`SpotiFiak.apk`** ci-dessous ou effectuez la mise à jour directement depuis l'application dans l'onglet **⚙️ Réglages** !
 
             ### ✨ Nouveautés de la version ${{ env.VERSION }} :

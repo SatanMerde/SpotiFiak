@@ -731,7 +731,7 @@
                 <span style="font-size:1.4rem;">🚀</span>
                 <div>
                   <div style="font-weight:700; font-size:0.95rem;">Mises à jour SpotiFiak</div>
-                  <div style="font-size:0.75rem; color:#888;">Version installée : <span style="color:#ff6e6e; font-weight:700;">v${currentAppVersion}</span></div>
+                  <div style="font-size:0.75rem; color:#888;">Version installée : <span style="color:#ff6e6e; font-weight:700;">v${currentAppVersion}</span> <span style="background:rgba(255,165,0,0.15); color:#ffa726; border:1px solid rgba(255,165,0,0.35); font-size:0.62rem; padding:1px 6px; border-radius:10px; font-weight:600;">EN DÉV (WIP)</span></div>
                 </div>
               </div>
               <span id="sf-update-status-pill" style="font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:10px; ${statusPillStyle}">
@@ -787,9 +787,10 @@
           <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
             <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">ℹ️ À propos de SpotiFiak</div>
             <div style="font-size:0.78rem; color:#a0a0b0; line-height:1.6;">
-              SpotiFiak v${currentAppVersion} • Client SpotiFiak Mobile pour Android.<br/>
+              SpotiFiak v${currentAppVersion} <span style="color:#ffa726; font-weight:600;">(Version en développement actif • Alpha)</span> • Client SpotiFiak Mobile pour Android.<br/>
               Inspiré de l'architecture WebView de SpotiDuck, avec gestion complète des thèmes et extensions.<br/><br/>
               <span style="color:#606070;">
+                🚧 Projet en cours de développement actif (WIP). Mises à jour régulières.<br/>
                 📜 Ce projet est open-source sous licence MIT.<br/>
                 ⚠️ Non affilié à Spotify AB. Usage éducatif uniquement.<br/>
                 🔒 Aucune donnée personnelle n'est collectée.<br/>
