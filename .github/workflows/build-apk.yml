@@ -43,6 +43,13 @@ jobs:
           set -o pipefail
           ./gradlew assembleDebug --stacktrace
 
+      - name: Extract Version
+        id: get_version
+        run: |
+          VERSION=$(grep 'versionName' app/build.gradle | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=v$VERSION" >> $GITHUB_ENV
+
       - name: Prepare APK for Release
         run: |
           mkdir -p release-files
@@ -60,28 +67,23 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.2.0
-          name: "SpotiFiak v1.2.0 — Spicetify Mobile & Résolution des Bugs d'Affichage 🍑"
+          tag_name: ${{ env.TAG }}
+          name: "SpotiFiak ${{ env.TAG }} — Auto-Mise à Jour In-App & Spicetify Mobile 🍑"
           body: |
-            ## 🍑 SpotiFiak v1.2.0 — Spicetify Mobile APK
+            ## 🍑 SpotiFiak ${{ env.TAG }} — Spicetify Mobile APK
 
-            Téléchargez **`SpotiFiak.apk`** ci-dessous et installez-le directement sur votre smartphone Android !
+            Téléchargez **`SpotiFiak.apk`** ci-dessous ou effectuez la mise à jour directement depuis l'application dans l'onglet **⚙️ Réglages** !
 
-            ### ✨ Nouveautés majeures de la version 1.2.0 :
+            ### ✨ Nouveautés de la version ${{ env.VERSION }} :
+            - 🚀 **Auto-mise à jour in-app en 1 clic** : Détection automatique des mises à jour GitHub Releases, téléchargement avec barre de progression et installation directe sans désinstaller ni perdre ses données.
             - 🍑 **Nouveau Logo Pêche Hybride Spotify (Style SpotiDuck)** : Logo vectoriel épuré combinant pêche stylisée et ondes musicales, appliqué sur l'icône de l'app, l'en-tête du lecteur et la documentation.
-            - 📱 **Résolution complète des bugs d'affichage** :
-              - Adaptation intégrale du lecteur web Spotify en affichage mobile responsive (100vw).
-              - Élimination des panneaux latéraux de bureau (`react-resizable-panels`) et barres de redimensionnement.
-              - Correction des erreurs DOM prématurées (`appendChild` sécurisé).
+            - 📱 **Interface Spicetify Mobile Responsive** : Plein écran natif (100vw), barre de navigation tactile, tiroir bibliothèque fluide.
             - 🏪 **Boutique d'Addons Communautaire Enrichie (16 Addons)** :
               - **8 Thèmes** : Peach Sunset, AMOLED Pure Black, Midnight Wave, Aurora Borealis, Retro Synthwave, Forest Green, Ocean Depth, Candy Pop.
               - **8 Extensions** : Lyrics+, Audio Visualizer, Sleep Timer, Equalizer Pro, Stats Dashboard, Smart Ad Skipper, Queue Manager+, Genre Explorer.
-              - **Barre de recherche en temps réel** (par nom, mots-clés, auteur ou tag).
-              - **Filtres par type** (Tout, Thèmes, Extensions) et **tri dynamique** (Populaires, Notes, A-Z, Récents).
-              - **Carrousel "Mis en avant"** et fonctionnalité de désinstallation en direct.
-              - **Notifications visuelles toasts in-app**.
-            - ✏️ **Onglet CSS Personnalisé** avec snippets rapides prédéfinis.
-            - 📜 **Informations Légales & Confidentialité** : Ajout de `docs/LEGAL.md` et `docs/PRIVACY.md` garantissant un projet open-source respectueux et sans aucune télémétrie.
+              - Barre de recherche en temps réel, filtres par type, tri dynamique et désinstallation en direct.
+            - ✏️ **Éditeur CSS Personnalisé** avec snippets prédéfinis.
+            - 📜 **Informations Légales & Confidentialité** : Projet open-source sans collecte de données personnelles.
           files: release-files/SpotiFiak.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
