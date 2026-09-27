@@ -13,3 +13,9 @@ android/app/build/
 *.aab
 local.properties
 .cxx/
+
+# Test scripts and debug captures
+*.png
+!docs/assets/*.png
+test_*.py
+scratch/
