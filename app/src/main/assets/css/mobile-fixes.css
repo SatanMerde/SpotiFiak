@@ -380,11 +380,7 @@ div[class*="OniARfz2TeTfg8Acjb6n"]::-webkit-scrollbar {
 
 /* 6. Card Grids: 2-Column Responsive for Phone */
 [data-testid="grid-container"],
-.main-gridContainer-gridContainer,
-div[style*="--min-column-width"],
-div.Khlo5YGFKhUzB74cjwIL,
-div[class*="Khlo5YGFKhUzB74cjwIL"],
-div[style*="grid-template-columns"] {
+.main-gridContainer-gridContainer {
   grid-template-columns: repeat(2, 1fr) !important;
   gap: 12px !important;
   padding: 8px 4px !important;
@@ -397,6 +393,75 @@ div[data-testid="card"],
 div[class*="Card"] {
   border-radius: 12px !important;
   background: rgba(24, 25, 36, 0.6) !important;
+}
+
+/* 6b. Artist Page & Multi-Column Desktop Layout Fixes */
+/* Force 2-column desktop Artist Page (Top Tracks + Artist Pick) to stack vertically */
+[data-testid="artist-page"] section > div[style*="grid"],
+[data-testid="artist-page"] div[style*="grid-template-columns"],
+main div[data-testid="artist-page"] > div,
+div[data-testid="artist-page"] div[style*="1fr 1fr"],
+section:has(> [data-testid="tracklist-row"]) ~ div,
+div:has(> [data-testid="tracklist-row"]) + div {
+  grid-template-columns: 1fr !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
+/* Ensure Artist Pick / "Sélection de l'artiste" is placed below tracks, never overlaps */
+div[class*="artistPick" i],
+div[data-testid="artist-pick"],
+div:has(> [data-testid="artist-pick"]) {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-top: 16px !important;
+  position: static !important;
+}
+
+/* Tracklist Container: Full width, no clipping */
+div[data-testid="tracklist"],
+div[role="grid"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Tracklist Rows: Clean 3-column layout on mobile (Index/Play, Title+Artist, Duration) */
+[data-testid="tracklist-row"],
+div[role="row"] {
+  display: grid !important;
+  grid-template-columns: [index] 36px [first] 1fr [last] auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 6px 4px !important;
+  align-items: center !important;
+}
+
+/* Hide desktop-only columns (plays count, album name, date added) on mobile */
+[data-testid="tracklist-row"] [aria-colindex="3"]:not(:last-child),
+[data-testid="tracklist-row"] [aria-colindex="4"]:not(:last-child),
+div[role="row"] [aria-colindex="3"]:not(:last-child),
+div[role="row"] [aria-colindex="4"]:not(:last-child),
+[data-testid="tracklist-row"] .main-trackList-rowSectionVariable {
+  display: none !important;
+}
+
+/* Ensure track title and artist are visible with full breathing room */
+[data-testid="tracklist-row"] [role="gridcell"]:nth-child(2),
+[data-testid="tracklist-row"] .main-trackList-rowMainContent {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  padding-right: 8px !important;
+}
+
+[data-testid="tracklist-row"] [role="gridcell"]:nth-child(2) div,
+[data-testid="tracklist-row"] [role="gridcell"]:nth-child(2) span,
+[data-testid="tracklist-row"] [role="gridcell"]:nth-child(2) a {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 /* 7. Sliding Library Drawer */

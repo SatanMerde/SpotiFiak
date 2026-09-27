@@ -58,7 +58,7 @@
     // ── In-App Update State & Handlers ──
     const currentAppVersion = (window.SpotiFiakNative && (window.SpotiFiakNative.getAppVersion || window.SpotiFiakNative.getVersion))
       ? (window.SpotiFiakNative.getAppVersion ? window.SpotiFiakNative.getAppVersion() : window.SpotiFiakNative.getVersion())
-      : '1.4.1';
+      : '1.4.2';
     let latestUpdateInfo = null;
     let isCheckingUpdate = false;
     let isDownloadingUpdate = false;
@@ -303,6 +303,20 @@
           btn.style.lineHeight = '1';
         }
       });
+
+      // Fix Artist page multi-column desktop layout on mobile (prevent artist pick from overlapping tracklist)
+      if (window.location.pathname.includes('/artist/')) {
+        const topTracks = document.querySelector('[data-testid="artist-page"] [data-testid="tracklist"]') ||
+                          document.querySelector('#main-view [data-testid="tracklist"]');
+        if (topTracks) {
+          const parentGrid = topTracks.closest('div[style*="grid"]');
+          if (parentGrid) {
+            parentGrid.style.setProperty('grid-template-columns', '1fr', 'important');
+            parentGrid.style.setProperty('display', 'flex', 'important');
+            parentGrid.style.setProperty('flex-direction', 'column', 'important');
+          }
+        }
+      }
     }
 
     // Run watcher immediately and on every DOM mutation (throttled)
@@ -420,7 +434,7 @@
                   <h1 style="margin:0; font-size:1.45rem; font-weight:900; background:linear-gradient(135deg,#ff6e6e,#ffa07a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px;">
                     SpotiFiak
                   </h1>
-                  <span style="background:rgba(255,110,110,0.18); border:1px solid rgba(255,110,110,0.35); color:#ffa07a; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:10px;">v1.4.1</span>
+                  <span style="background:rgba(255,110,110,0.18); border:1px solid rgba(255,110,110,0.35); color:#ffa07a; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:10px;">v1.4.2</span>
                 </div>
                 <p style="margin:2px 0 0; font-size:0.75rem; color:#a0a0b0;">SpotiFiak Hub • ${totalAddons} addons • ${installedCount} actif${installedCount > 1 ? 's' : ''}</p>
               </div>
@@ -591,7 +605,6 @@
           </div>
         `}
       `;
-    }
     }
 
     function renderAddonCard(a) {
