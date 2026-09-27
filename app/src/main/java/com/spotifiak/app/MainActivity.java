@@ -1,7 +1,5 @@
 // SpotiFiak Android — WebView Activity
-// This is the main Android activity that loads Spotify Web Player
-// and injects SpotiFiak JS/CSS for addons, themes, and extensions.
-// Inspired by SpotiDuck's WebView approach.
+// Incorporates the battle-tested SpotiDuck mobile engine with Spicetify addons & in-app updater.
 
 package com.spotifiak.app;
 
@@ -9,61 +7,87 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.media.MediaMetadata;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Toast;
-import android.view.Gravity;
-import android.webkit.PermissionRequest;
-import android.media.AudioManager;
-import android.content.Context;
+
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
 
     private WebView webView;
-    private UpdateManager updateManager = new UpdateManager();
+    private final UpdateManager updateManager = new UpdateManager();
     private MediaSession mediaSession;
     private boolean isPlaying = false;
+    private PowerManager.WakeLock wakeLock;
 
     // Spotify Web Player URL
     private static final String SPOTIFY_URL = "https://open.spotify.com";
-    
-    // Desktop User Agent — forces desktop mode like SpotiDuck to unlock full player
-    private static final String DESKTOP_USER_AGENT = 
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
+
+    // Desktop Chrome 134 User Agent — matches SpotiDuck desktop spoofing
+    private static final String DESKTOP_USER_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36";
+
+    // Adblock hosts set loaded from adblock_hosts.txt
+    private final Set<String> adHosts = new HashSet<>();
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Load adblock hosts
+        loadAdblockHosts();
+
+        // Setup wake lock for background playback
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null) {
+                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SpotiFiak:PlaybackWakeLock");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("SpotiFiak", "Error creating wake lock", e);
+        }
 
         // Fullscreen immersive mode
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -71,14 +95,14 @@ public class MainActivity extends Activity {
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         );
-        
-        // Dark status/nav bars
+
+        // Dark status & nav bars
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(Color.parseColor("#0a0a0a"));
             getWindow().setNavigationBarColor(Color.parseColor("#0a0a0a"));
         }
 
-        // Create Root Layout
+        // Root layout
         FrameLayout rootLayout = new FrameLayout(this);
         rootLayout.setBackgroundColor(Color.parseColor("#0a0a0a"));
 
@@ -92,10 +116,8 @@ public class MainActivity extends Activity {
 
         setContentView(rootLayout);
 
-        // Setup media session for lock screen controls
+        // MediaSession for lock screen & notification controls
         setupMediaSession();
-
-        // Create notification channel for Android 8+
         createNotificationChannel();
 
         // Start background playback service
@@ -112,84 +134,147 @@ public class MainActivity extends Activity {
 
         // Load Spotify
         webView.loadUrl(SPOTIFY_URL);
-
-        // Guaranteed timed injection retries (independent of onPageFinished delays)
-        webView.postDelayed(() -> injectSpotiFiak(webView), 1500);
-        webView.postDelayed(() -> injectSpotiFiak(webView), 3500);
-        webView.postDelayed(() -> injectSpotiFiak(webView), 6500);
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    /**
+     * Loads ad-blocking domains from assets/adblock_hosts.txt
+     */
+    private void loadAdblockHosts() {
+        try {
+            InputStream is = getAssets().open("adblock_hosts.txt");
+            BufferedReader r = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            String line;
+            while ((line = r.readLine()) != null) {
+                line = line.trim();
+                if (!line.isEmpty() && !line.startsWith("#")) {
+                    int space = line.indexOf(' ');
+                    if (space != -1) {
+                        line = line.substring(space + 1).trim();
+                    }
+                    adHosts.add(line.toLowerCase(Locale.ROOT));
+                }
+            }
+            r.close();
+        } catch (Exception e) {
+            android.util.Log.e("SpotiFiak", "Failed to load adblock_hosts.txt", e);
+        }
+    }
+
+    @SuppressLint({"SetJavaScriptEnabled", "RequiresFeature"})
     private void setupWebView() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true);
         }
-        WebSettings settings = webView.getSettings();
 
-        // JavaScript — essential for Spotify
-        settings.setJavaScriptEnabled(true);
-        settings.setJavaScriptCanOpenWindowsAutomatically(true);
-
-        // Desktop mode — like SpotiDuck, trick Spotify into desktop layout
-        settings.setUserAgentString(DESKTOP_USER_AGENT);
-
-        // DOM storage & databases
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-
-        // Media
-        settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setAllowContentAccess(true);
-
-        // Cache & performance
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        // Important: Use device-pixel width instead of 980px desktop zoom
-        settings.setLoadWithOverviewMode(false);
-        settings.setUseWideViewPort(false);
-        settings.setTextZoom(100);
-
-        // Mixed content (HTTP resources in HTTPS page) & media access
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        }
-        settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(true);
-
-        // Enable cookies for Spotify login
+        // 1. Enable Cookies & Third Party Cookies for Spotify authentication
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.setAcceptThirdPartyCookies(webView, true);
         }
 
-        // Add JavaScript interface for native bridge
+        // 2. DOCUMENT_START_SCRIPT: Inject desktop_spoof.js before any Spotify scripts execute
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            String desktopSpoof = loadAsset("js/desktop_spoof.js");
+            if (desktopSpoof != null) {
+                try {
+                    WebViewCompat.addDocumentStartJavaScript(webView, desktopSpoof, Collections.singleton("*"));
+                } catch (Exception e) {
+                    android.util.Log.e("SpotiFiak", "Error adding document start script", e);
+                }
+            }
+        }
+
+        WebSettings settings = webView.getSettings();
+
+        // 3. Strip X-Requested-With header: CRITICAL to allow DRM license & audio stream requests!
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
+            try {
+                WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, Collections.emptySet());
+            } catch (Exception e) {
+                android.util.Log.e("SpotiFiak", "Error setting requested with header allow list", e);
+            }
+        }
+
+        // 4. Configure WebSettings to match SpotiDuck
+        settings.setUserAgentString(DESKTOP_USER_AGENT);
+        settings.setJavaScriptEnabled(true);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
+        settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            settings.setSafeBrowsingEnabled(false);
+        }
+        try {
+            settings.setOffscreenPreRaster(true);
+        } catch (Exception ignored) {}
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        webView.setInitialScale(100);
+        webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
+        webView.setScrollBarStyle(WebView.SCROLLBARS_INSIDE_OVERLAY);
+        webView.setBackgroundColor(Color.parseColor("#121212"));
+
+        // 5. JavaScript Interfaces: AndBridge (for SpotiDuck bridge) + SpotiFiakNative (for updater/store)
+        webView.addJavascriptInterface(new AndBridge(), "AndBridge");
         webView.addJavascriptInterface(new SpotiFiakBridge(), "SpotiFiakNative");
 
-        // WebView client — handles page loading and JS injection
+        // 6. WebViewClient: Ad interception + script injection
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
-                if (url.contains("open.spotify.com")) {
-                    injectEarlyFixes(view);
+                // Fallback injection of desktop spoofing on start
+                String spoof = loadAsset("js/desktop_spoof.js");
+                if (spoof != null) {
+                    view.evaluateJavascript(spoof, null);
                 }
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                
-                // Inject SpotiFiak core scripts when Spotify loads
-                if (url.contains("open.spotify.com")) {
-                    injectSpotiFiak(view);
+                injectSpotiDuckAndSpotiFiak(view);
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                String host = uri.getHost();
+
+                // 1. Block ad domains from adblock_hosts.txt
+                if (host != null && adHosts.contains(host.toLowerCase(Locale.ROOT))) {
+                    return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(new byte[0]));
                 }
+
+                // 2. Intercept audio ads and serve silent.mp3
+                String url = uri.toString();
+                if (url.contains("audio-fa.scdn.co") || 
+                    url.contains("audio-ak.spotifycdn.com") || 
+                    url.contains("/ad-logic/")) {
+                    try {
+                        InputStream is = getAssets().open("silent.mp3");
+                        Map<String, String> headers = new HashMap<>();
+                        headers.put("Access-Control-Allow-Origin", "*");
+                        headers.put("Accept-Ranges", "bytes");
+                        return new WebResourceResponse("audio/mpeg", "utf-8", 200, "OK", headers, is);
+                    } catch (Exception ignored) {}
+                }
+
+                return super.shouldInterceptRequest(view, request);
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                
-                // Keep Spotify URLs and auth identity providers (Google, Facebook, Apple, Spotify) in WebView
                 if (url.contains("spotify.com") || 
                     url.contains("spotify.link") ||
                     url.contains("accounts.google.com") ||
@@ -197,8 +282,6 @@ public class MainActivity extends Activity {
                     url.contains("appleid.apple.com")) {
                     return false;
                 }
-                
-                // Open external links in browser
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     startActivity(intent);
@@ -209,129 +292,110 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Chrome client for fullscreen video, console logs, and progress-based injection
+        // 7. WebChromeClient: Auto-grant DRM Protected Media ID for music streaming
         webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                super.onProgressChanged(view, newProgress);
-                if (newProgress >= 50) {
-                    injectSpotiFiak(view);
-                }
-            }
-
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
                 runOnUiThread(() -> {
-                    // Crucial: Automatically grant Protected Media ID (Widevine DRM) so Spotify music playback works!
+                    // Crucial: Automatically grant Widevine DRM Protected Media ID
                     request.grant(request.getResources());
                 });
             }
 
             @Override
             public boolean onConsoleMessage(android.webkit.ConsoleMessage msg) {
-                android.util.Log.d("SpotiFiak", msg.message());
+                android.util.Log.d("SpotiFiakWeb", msg.message());
                 return true;
             }
         });
-
-        // Dark background while loading
-        webView.setBackgroundColor(Color.parseColor("#0a0a0a"));
     }
 
     /**
-     * Inject early viewport meta tag and CSS before full DOM finishes
+     * Injects SpotiDuck's mobile engine and SpotiFiak's Spicetify addons/updater
      */
-    private void injectEarlyFixes(WebView view) {
-        String mobileCss = loadAsset("css/mobile-fixes.css");
-        String initJs = 
-            "(() => {" +
-            "  let m = document.querySelector('meta[name=\"viewport\"]');" +
-            "  if (!m && (document.head || document.documentElement)) { m = document.createElement('meta'); m.name = 'viewport'; (document.head || document.documentElement).appendChild(m); }" +
-            "  if (m) m.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';" +
-            "  if (!document.getElementById('spotifiak-mobile-fixes') && (document.head || document.documentElement)) {" +
-            "    let s = document.createElement('style'); s.id = 'spotifiak-mobile-fixes';" +
-            "    s.textContent = " + (mobileCss != null ? escapeForJS(mobileCss) : "''") + ";" +
-            "    (document.head || document.documentElement).appendChild(s);" +
-            "  }" +
-            "})();";
-        view.evaluateJavascript(initJs, null);
-    }
+    private void injectSpotiDuckAndSpotiFiak(WebView view) {
+        int width = getResources().getDisplayMetrics().widthPixels;
+        int height = getResources().getDisplayMetrics().heightPixels;
 
-    /**
-     * Inject SpotiFiak scripts and styles into the Spotify Web Player.
-     */
-    private void injectSpotiFiak(WebView view) {
-        // 0. Ensure viewport meta tag is set
-        injectEarlyFixes(view);
+        // 1. SpotiDuck Config Object
+        String sfConfig = String.format(Locale.ROOT,
+            "window.SF_CONFIG = { " +
+            "  isAndAutoEnabled: false, " +
+            "  guiMode: 'csshack', " +
+            "  isCanvasDisabled: true, " +
+            "  isFullScreenEnabled: true, " +
+            "  isAmoled: true, " +
+            "  autoPlayMode: 'off', " +
+            "  closeNowPlay: false, " +
+            "  takeControl: true, " +
+            "  closeLibText: 'Fermer', " +
+            "  hideStatusBar: true, " +
+            "  statusBarHeight: 0, " +
+            "  screenWidth: %d, " +
+            "  screenHeight: %d " +
+            "};",
+            width, height
+        );
+        view.evaluateJavascript(sfConfig, null);
 
-        // 1. Inject base CSS fixes for mobile
+        // 2. Desktop Spoofing (ServiceWorker blocker, touch play button, connect-state rewriter)
+        String desktopSpoof = loadAsset("js/desktop_spoof.js");
+        if (desktopSpoof != null) {
+            view.evaluateJavascript(desktopSpoof, null);
+        }
+
+        // 3. SpotiDuck Spotify Bridge (captures Spotify platform, player bar, touch controls)
+        String spotifyBridge = loadAsset("js/spotify_bridge.js");
+        if (spotifyBridge != null) {
+            view.evaluateJavascript(spotifyBridge, null);
+        }
+
+        // 4. SpotiDuck CSS Hacks (43KB tailored mobile responsive layout)
+        String cssHacks = loadAsset("css/css_hacks.css");
+        if (cssHacks != null) {
+            String cssInj = "(function() { " +
+                "var s = document.getElementById('sf-custom-style'); " +
+                "if (!s) { " +
+                "  s = document.createElement('style'); " +
+                "  s.id = 'sf-custom-style'; " +
+                "  (document.head || document.documentElement).appendChild(s); " +
+                "} " +
+                "s.textContent = " + escapeForJS(cssHacks) + "; " +
+                "document.body.classList.add('sf-fullscreen-enabled', 'sf-video-bg'); " +
+                "})();";
+            view.evaluateJavascript(cssInj, null);
+        }
+
+        // 5. SpotiFiak Custom Styling (Peach accents, bottom navigation, in-app updater)
         String mobileCss = loadAsset("css/mobile-fixes.css");
         if (mobileCss != null) {
-            String cssInjection = "(() => {" +
-                "let style = document.getElementById('spotifiak-mobile-fixes');" +
-                "if (!style && (document.head || document.documentElement)) { style = document.createElement('style'); style.id = 'spotifiak-mobile-fixes'; (document.head || document.documentElement).appendChild(style); }" +
-                "if (style) { style.textContent = " + escapeForJS(mobileCss) + "; }" +
-            "})();";
-            view.evaluateJavascript(cssInjection, null);
+            String spotifiakCssInj = "(function() { " +
+                "var s = document.getElementById('spotifiak-mobile-fixes'); " +
+                "if (!s) { " +
+                "  s = document.createElement('style'); " +
+                "  s.id = 'spotifiak-mobile-fixes'; " +
+                "  (document.head || document.documentElement).appendChild(s); " +
+                "} " +
+                "s.textContent = " + escapeForJS(mobileCss) + "; " +
+                "})();";
+            view.evaluateJavascript(spotifiakCssInj, null);
         }
 
-        // 2. Inject the SpotiFiak API (Spicetify compatibility layer)
+        // 6. SpotiFiak Spicetify API, Marketplace & Addon Loader
         String apiScript = loadAsset("js/spotifiak-api.js");
-        if (apiScript != null) {
-            view.evaluateJavascript(apiScript, null);
-        }
+        if (apiScript != null) view.evaluateJavascript(apiScript, null);
 
-        // 3. Inject the SpotiFiak overlay UI (marketplace, addon manager)
         String overlayScript = loadAsset("js/spotifiak-overlay.js");
-        if (overlayScript != null) {
-            view.evaluateJavascript(overlayScript, null);
-        }
+        if (overlayScript != null) view.evaluateJavascript(overlayScript, null);
 
-        // 4. Inject the addon loader
         String loaderScript = loadAsset("js/addon-loader.js");
-        if (loaderScript != null) {
-            view.evaluateJavascript(loaderScript, null);
-        }
-
-        // 5. Inject the playback monitor for lock screen controls
-        String playbackMonitor = loadAsset("js/playback-monitor.js");
-        if (playbackMonitor != null) {
-            view.evaluateJavascript(playbackMonitor, null);
-        }
-
-        // 6. SPA Route change observer
-        String spaObserver = 
-            "(() => {" +
-            "  if (window._sfSpaObserver) return;" +
-            "  window._sfSpaObserver = true;" +
-            "  const notifyNav = () => {" +
-            "    setTimeout(() => {" +
-            "      if (window.SpotiFiak) {" +
-            "        let s = document.getElementById('spotifiak-mobile-fixes');" +
-            "        if (!s && (document.head || document.documentElement)) { " +
-            "          let n = document.createElement('style'); n.id = 'spotifiak-mobile-fixes';" +
-            "          n.textContent = " + (mobileCss != null ? escapeForJS(mobileCss) : "''") + ";" +
-            "          (document.head || document.documentElement).appendChild(n);" +
-            "        }" +
-            "      }" +
-            "    }, 300);" +
-            "  };" +
-            "  window.addEventListener('popstate', notifyNav);" +
-            "  const origPush = history.pushState;" +
-            "  history.pushState = function() { origPush.apply(this, arguments); notifyNav(); };" +
-            "})();";
-        view.evaluateJavascript(spaObserver, null);
+        if (loaderScript != null) view.evaluateJavascript(loaderScript, null);
     }
 
-    /**
-     * Load a file from the assets/ directory
-     */
     private String loadAsset(String filename) {
         try {
             InputStream is = getAssets().open(filename);
-            BufferedReader reader = new BufferedReader(
-                new InputStreamReader(is, StandardCharsets.UTF_8)
-            );
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -345,124 +409,243 @@ public class MainActivity extends Activity {
         }
     }
 
-    /**
-     * Escape string content for JavaScript injection
-     */
     private String escapeForJS(String content) {
-        return "`" + content
-            .replace("\\", "\\\\")
-            .replace("`", "\\`")
-            .replace("$", "\\$") + "`";
+        return JSONObject.quote(content);
     }
 
     /**
-     * Setup Android MediaSession for lock screen controls
+     * AndBridge — JavascriptInterface implementing the SpotiDuck bridge API
+     */
+    public class AndBridge {
+        @JavascriptInterface
+        public void recMediaStatus(String statusJson) {
+            try {
+                JSONObject obj = new JSONObject(statusJson);
+                String track = obj.optString("track", "");
+                String artist = obj.optString("artist", "");
+                long duration = obj.optLong("duration", 0);
+                long position = obj.optLong("position", 0);
+                boolean playing = obj.optBoolean("playing", false);
+                String cover = obj.optString("cover", "");
+
+                isPlaying = playing;
+                runOnUiThread(() -> updateMediaSessionState(track, artist, cover, playing, position, duration));
+            } catch (Exception e) {
+                android.util.Log.e("SpotiFiak", "Error in recMediaStatus", e);
+            }
+        }
+
+        @JavascriptInterface
+        public void recMediaPosition(long pos) {
+            if (mediaSession != null && isPlaying) {
+                try {
+                    mediaSession.setPlaybackState(new PlaybackState.Builder()
+                        .setState(PlaybackState.STATE_PLAYING, pos, 1.0f)
+                        .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE |
+                                    PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS |
+                                    PlaybackState.ACTION_SEEK_TO)
+                        .build());
+                } catch (Exception ignored) {}
+            }
+        }
+
+        @JavascriptInterface
+        public void wakeUp() {
+            try {
+                if (wakeLock != null && !wakeLock.isHeld()) {
+                    wakeLock.acquire(10 * 60 * 1000L /* 10 minutes */);
+                }
+            } catch (Exception ignored) {}
+        }
+
+        @JavascriptInterface
+        public void wakeOff() {
+            try {
+                if (wakeLock != null && wakeLock.isHeld()) {
+                    wakeLock.release();
+                }
+            } catch (Exception ignored) {}
+        }
+
+        @JavascriptInterface
+        public boolean isWoke() {
+            return wakeLock != null && wakeLock.isHeld();
+        }
+
+        @JavascriptInterface
+        public void cssInjected() {
+            android.util.Log.d("SpotiFiak", "CSS Injected successfully");
+        }
+
+        @JavascriptInterface
+        public void playLoaded() {
+            android.util.Log.d("SpotiFiak", "Playback loaded successfully");
+        }
+
+        @JavascriptInterface
+        public void onUserInfoCaptured(String token, String cliToken, String devId) {
+            android.util.Log.d("SpotiFiak", "User info captured: devId=" + devId);
+        }
+
+        @JavascriptInterface
+        public void setExpanded(boolean expanded) {
+            android.util.Log.d("SpotiFiak", "Fullscreen player state: " + expanded);
+        }
+
+        @JavascriptInterface
+        public void setSearchActive(boolean active) {
+            android.util.Log.d("SpotiFiak", "Search active: " + active);
+        }
+
+        @JavascriptInterface
+        public void enterPip() {}
+
+        @JavascriptInterface
+        public void enterPipVideo(int w, int h) {}
+
+        @JavascriptInterface
+        public boolean isSignatureValid() {
+            return true;
+        }
+
+        @JavascriptInterface
+        public void loginDetected() {}
+
+        @JavascriptInterface
+        public void deferMessage(String msg) {}
+
+        @JavascriptInterface
+        public void setCanvasDisabled(boolean disabled) {}
+
+        @JavascriptInterface
+        public void manageTSleep(boolean sleep) {}
+
+        @JavascriptInterface
+        public void manageTShut(boolean shut) {}
+
+        @JavascriptInterface
+        public void onMediaItemsLoaded(String rootId, String itemsJson) {}
+
+        @JavascriptInterface
+        public void onSearchCompleted(String query, String resultJson) {}
+
+        @JavascriptInterface
+        public String nativeFetch(String url, String method, String headersJson, String body) {
+            return null;
+        }
+    }
+
+    /**
+     * MediaSession setup for system controls
      */
     private void setupMediaSession() {
-        mediaSession = new MediaSession(this, "SpotiFiak");
-        mediaSession.setActive(true);
-        
-        mediaSession.setCallback(new MediaSession.Callback() {
-            @Override
-            public void onPlay() {
-                webView.evaluateJavascript(
-                    "document.querySelector('[data-testid=\"control-button-playpause\"]')?.click();",
-                    null
-                );
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mediaSession = new MediaSession(this, "SpotiFiakMediaSession");
+            mediaSession.setCallback(new MediaSession.Callback() {
+                @Override
+                public void onPlay() {
+                    sendMediaKey("play");
+                }
 
-            @Override
-            public void onPause() {
-                webView.evaluateJavascript(
-                    "document.querySelector('[data-testid=\"control-button-playpause\"]')?.click();",
-                    null
-                );
-            }
+                @Override
+                public void onPause() {
+                    sendMediaKey("pause");
+                }
 
-            @Override
-            public void onSkipToNext() {
-                webView.evaluateJavascript(
-                    "document.querySelector('[data-testid=\"control-button-skip-forward\"]')?.click();",
-                    null
-                );
-            }
+                @Override
+                public void onSkipToNext() {
+                    sendMediaKey("next");
+                }
 
-            @Override
-            public void onSkipToPrevious() {
-                webView.evaluateJavascript(
-                    "document.querySelector('[data-testid=\"control-button-skip-back\"]')?.click();",
-                    null
-                );
-            }
-        });
+                @Override
+                public void onSkipToPrevious() {
+                    sendMediaKey("previous");
+                }
 
-        updatePlaybackState(false);
+                @Override
+                public void onSeekTo(long pos) {
+                    runOnUiThread(() -> {
+                        String js = "window.SpotiDuck && window.SpotiDuck.Platform && window.SpotiDuck.Platform.getPlayerAPI().seekTo(" + pos + ");";
+                        webView.evaluateJavascript(js, null);
+                    });
+                }
+            });
+            mediaSession.setActive(true);
+        }
     }
 
-    private void updatePlaybackState(boolean playing) {
-        this.isPlaying = playing;
+    private void sendMediaKey(String action) {
+        runOnUiThread(() -> {
+            String js;
+            switch (action) {
+                case "play":
+                case "pause":
+                    js = "window.togglePlayPause ? window.togglePlayPause() : (document.querySelector('[data-testid=\"control-button-playpause\"]') && document.querySelector('[data-testid=\"control-button-playpause\"]').click());";
+                    break;
+                case "next":
+                    js = "window.playNextTrack ? window.playNextTrack() : (document.querySelector('[data-testid=\"control-button-skip-forward\"]') && document.querySelector('[data-testid=\"control-button-skip-forward\"]').click());";
+                    break;
+                case "previous":
+                    js = "window.playPrevTrack ? window.playPrevTrack() : (document.querySelector('[data-testid=\"control-button-skip-back\"]') && document.querySelector('[data-testid=\"control-button-skip-back\"]').click());";
+                    break;
+                default:
+                    return;
+            }
+            webView.evaluateJavascript(js, null);
+        });
+    }
+
+    private void updateMediaSessionState(String title, String artist, String coverUrl, boolean playing, long position, long duration) {
+        if (mediaSession == null) return;
+
+        MediaMetadata.Builder metaBuilder = new MediaMetadata.Builder()
+            .putString(MediaMetadata.METADATA_KEY_TITLE, title.isEmpty() ? "SpotiFiak" : title)
+            .putString(MediaMetadata.METADATA_KEY_ARTIST, artist.isEmpty() ? "Spotify" : artist)
+            .putLong(MediaMetadata.METADATA_KEY_DURATION, duration);
+
+        mediaSession.setMetadata(metaBuilder.build());
+
         PlaybackState.Builder stateBuilder = new PlaybackState.Builder()
             .setActions(
-                PlaybackState.ACTION_PLAY |
-                PlaybackState.ACTION_PAUSE |
-                PlaybackState.ACTION_SKIP_TO_NEXT |
-                PlaybackState.ACTION_SKIP_TO_PREVIOUS |
-                PlaybackState.ACTION_PLAY_PAUSE
+                PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE |
+                PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS |
+                PlaybackState.ACTION_SEEK_TO
             )
             .setState(
                 playing ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED,
-                PlaybackState.PLAYBACK_POSITION_UNKNOWN,
-                1.0f
+                position,
+                playing ? 1.0f : 0.0f
             );
-        mediaSession.setPlaybackState(stateBuilder.build());
-    }
 
-    private void updateMediaMetadata(String title, String artist, String album) {
-        MediaMetadata.Builder metadataBuilder = new MediaMetadata.Builder()
-            .putString(MediaMetadata.METADATA_KEY_TITLE, title)
-            .putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
-            .putString(MediaMetadata.METADATA_KEY_ALBUM, album);
-        mediaSession.setMetadata(metadataBuilder.build());
+        mediaSession.setPlaybackState(stateBuilder.build());
     }
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 "spotifiak_playback",
-                "Lecture SpotiFiak",
+                "SpotiFiak Audio",
                 NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("Contrôles de lecture SpotiFiak");
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm != null) {
+                nm.createNotificationChannel(channel);
             }
         }
     }
 
     /**
-     * JavaScript Bridge — Native Android methods callable from JS
+     * SpotiFiakBridge — JavascriptInterface for in-app updates and settings
      */
-    private class SpotiFiakBridge {
-        
+    public class SpotiFiakBridge {
         @JavascriptInterface
-        public void showToast(String message) {
-            runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show());
-        }
-
-        @JavascriptInterface
-        public void updatePlayback(boolean playing) {
-            runOnUiThread(() -> updatePlaybackState(playing));
-        }
-
-        @JavascriptInterface
-        public void updateTrack(String title, String artist, String album) {
-            runOnUiThread(() -> updateMediaMetadata(title, artist, album));
-        }
-
-        @JavascriptInterface
-        public String getVersion() {
-            return UpdateManager.getCurrentVersion(MainActivity.this);
+        public String getAppVersion() {
+            try {
+                return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            } catch (Exception e) {
+                return "1.3.2";
+            }
         }
 
         @JavascriptInterface
@@ -471,15 +654,25 @@ public class MainActivity extends Activity {
                 @Override
                 public void onResult(UpdateManager.UpdateInfo info) {
                     runOnUiThread(() -> {
-                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateCheckResult && window.SpotiFiak.onUpdateCheckResult(" + info.toJson().toString() + ");";
-                        webView.evaluateJavascript(js, null);
+                        if (info.isUpdateAvailable) {
+                            String js = String.format(
+                                "window.SpotiFiak && window.SpotiFiak.onUpdateAvailable && window.SpotiFiak.onUpdateAvailable(%s, %s, %s);",
+                                JSONObject.quote(info.latestVersion),
+                                JSONObject.quote(info.releaseNotes),
+                                JSONObject.quote(info.apkDownloadUrl)
+                            );
+                            webView.evaluateJavascript(js, null);
+                        } else {
+                            String js = "window.SpotiFiak && window.SpotiFiak.onNoUpdateAvailable && window.SpotiFiak.onNoUpdateAvailable();";
+                            webView.evaluateJavascript(js, null);
+                        }
                     });
                 }
 
                 @Override
                 public void onError(String error) {
                     runOnUiThread(() -> {
-                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateCheckError && window.SpotiFiak.onUpdateCheckError(" + JSONObject.quote(error) + ");";
+                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateError && window.SpotiFiak.onUpdateError(" + JSONObject.quote(error) + ");";
                         webView.evaluateJavascript(js, null);
                     });
                 }
@@ -487,13 +680,15 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public void downloadAndInstallUpdate(String apkUrl) {
-            runOnUiThread(() -> Toast.makeText(MainActivity.this, "Téléchargement de la mise à jour...", Toast.LENGTH_SHORT).show());
-            updateManager.downloadAndInstall(MainActivity.this, apkUrl, new UpdateManager.DownloadProgressCallback() {
+        public void downloadAndInstallUpdate(String downloadUrl) {
+            updateManager.downloadAndInstall(MainActivity.this, downloadUrl, new UpdateManager.DownloadProgressCallback() {
                 @Override
-                public void onProgress(int percent, long downloadedBytes, long totalBytes) {
+                public void onProgress(int progressPercent, long downloadedBytes, long totalBytes) {
                     runOnUiThread(() -> {
-                        String js = "window.SpotiFiak && window.SpotiFiak.onUpdateProgress && window.SpotiFiak.onUpdateProgress(" + percent + ", " + downloadedBytes + ", " + totalBytes + ");";
+                        String js = String.format(Locale.ROOT,
+                            "window.SpotiFiak && window.SpotiFiak.onUpdateProgress && window.SpotiFiak.onUpdateProgress(%d, %d, %d);",
+                            progressPercent, downloadedBytes, totalBytes
+                        );
                         webView.evaluateJavascript(js, null);
                     });
                 }
@@ -518,6 +713,11 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void showToast(String message) {
+            runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show());
+        }
+
+        @JavascriptInterface
         public void log(String message) {
             android.util.Log.d("SpotiFiak-JS", message);
         }
@@ -535,12 +735,13 @@ public class MainActivity extends Activity {
         UpdateManager.handleActivityResult(this, requestCode, resultCode);
     }
 
-    // Handle back button — close overlays first, then go back in history
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             webView.evaluateJavascript(
                 "(() => {" +
+                "  let fs = document.getElementById('sf-fs-player');" +
+                "  if (fs) { fs.remove(); return 'closed_fs'; }" +
                 "  let p = document.getElementById('spotifiak-panel');" +
                 "  if (p && (p.style.top === '0px' || p.style.top === '0%')) {" +
                 "    if (window.toggleSpotiFiakPanel) window.toggleSpotiFiakPanel();" +
@@ -590,11 +791,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Don't pause WebView — keep playing in background like SpotiDuck
+        // Keep playing in background
     }
 
     @Override
     protected void onDestroy() {
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+        }
         if (mediaSession != null) {
             mediaSession.setActive(false);
             mediaSession.release();
