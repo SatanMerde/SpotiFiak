@@ -6,7 +6,7 @@
 (function() {
   'use strict';
 
-  const PEACH_LOGO_SRC = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZmOWE4YiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iI2ZmNmU2ZSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNlODUzNGEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InBzIiBjeD0iMC4zIiBjeT0iMC4zIiByPSIwLjciPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMzUpIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0icmdiYSgyNTUsMjU1LDI1NSwwKSIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPGNpcmNsZSBjeD0iMzIiIGN5PSIzNSIgcj0iMjciIGZpbGw9InVybCgjcGcpIi8+CiAgPGNpcmNsZSBjeD0iMzIiIGN5PSIzNSIgcj0iMjciIGZpbGw9InVybCgjcHMpIi8+CiAgPHBhdGggZD0iTTMyIDEwIFEzNyAzIDQzIDUgUTM4IDEwIDM0IDE3IFoiIGZpbGw9IiM0Q0FGNTAiLz4KICA8cGF0aCBkPSJNMzIgMTAgUTI3IDMgMjEgNiBRMjYgMTEgMzAgMTcgWiIgZmlsbD0iIzY2QkI2QSIvPgogIDxwYXRoIGQ9Ik0xOSAzMCBDMTkgMTkgNDUgMTkgNDUgMzAiIHN0cm9rZT0iIzFhMWEyZSIgc3Ryb2tlLXdpZHRoPSIzIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNMjEgMzcgQzIxIDI3IDQzIDI3IDQzIDM3IiBzdHJva2U9IiMxYTFhMmUiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHBhdGggZD0iTTIzIDQ0IEMyMyAzNSA0MSAzNSA0MSA0NCIgc3Ryb2tlPSIjMWExYTJlIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=';
+  const PEACH_LOGO_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AABBAElEQVR42uW9d5hdV3X3/9l7n3Num1400oy6LEtWcbexcZG7sbFDbCwbg+ktISEJIQm8hDAWBAgB55cAgRgcOjFYARyKe5EM2LIty5Jt9a7RSJrebjtl7/3+cc7cuTMaGVPS3t88Os+M5t4799y91l7lu75rbcH/kC9rEaxdLdm6TABGrFljpn+mAATvsdq9FRTA3aC/ImSY/KXp/34nEjoly5dbVq82Qgj7P+Fzi//WRQfBPaslgLh5ra5+7M6NG7OX7vvl/FR+bHHalBZ7JphnwrDDcZxmEQU1ApGVUrjCWrQxUWhNUbnpfGjMgHDcI5FwD0ZuZveoU7/nxdMv3X/zihX5Se99z2oFwOq1Rgjs/68EYDs7JayTYs36aPx3nT/+cfYdQ1vOzPjFS9Laf7XS4Qpp9Jx0ygUJWA3WgjFgLFgzoewCkDL+WUqQAoQAIwlCgxbqSOQ4LwUq82TgZtb9Yu6rn7v50kvzE/ezyoFLXmbX/T8iANvZKdm2TYi1sbZ3Pr4//d6D37o0Wxx5vRP5l+eUnY8jwGiINCYyYK02YIUFa22sq9aI8Zu3yQ8WEAgLAiTWAhIphLRKSgGuBOVAJCha1RW66cfyKvvDx+a8+tG3XH11Yfz+1i7fJm6eshv/1wsg1ngY17Atd318ycxg7M01+LdkhT4JYSAM0IGxWDTaCLBCaATWCqyNtX+SyldLIF7u+Hv8HCEEVgBCWKOkFUJYK4W1COV6rsB1wEIhMgeKwl3bV9v6zeVv+9jW6e73f60ArLWCtTfLcfu+6yud57WFQ3/iRf4N6bRKE/joUBuhMVZrKTRSGJMsdvXt2Ze9UytAWFHx5tUvm3hOIiQpMEoaI6WVwgrHkRLPpRQSBqnMj3tl9gsnv/fT6yt+YvU9/6kO+z9NAPae1Wp84Xd/7W/PbPWHPpINC693XQvlAK1tJLSRIrSyYt+FOPGd2Wnu3J7gv9XyGjdPtvrp8XtZKbFKGqQwUuKITAodWcaQP+2S6U+d+v5/egrg8c5VzqVV/up/tACstYLbhRBrME9//YszTyrs+5ucKb0n5QnHFssYbbQItUQbIY1NzETVjdhYo6cLmSpPqlptYafuhOlfMt2umbBoAiulNUoYIZEq5YogMjbvpb++zZux5qL3rjlkO5G308ma37FZEv9ZWt/zlY+8rbY89KmMY2fZcoDRVoswUkLriZWxv/oG7Inu0oKYZGumLnfV/ysL/TIisfFjVgqMo7SSQpJNiZIW/YNO+mOz//ifvjz1M/6PEoDt7HTEmjXRL+76TPuKoOcL9ZRuxC+jIyIRaUeE0a//Zsl6jWv2ZGEkD9hqn2yqZGsRVmDlxLpXW7FJVr3yovhNrASjFEgZKSkd0h7DRt73QpT741V/ecd+27nKEb8jkyR+VxmsuHmt3velj1w9S498NS3DOboYaGuQKoyE0GbyO4kTJqzTSqAiAHEiWzL+SZIIyE4YfCun/4iT3eqUnWEtFgtCYqS0Qgot055TsqK3W6bfu/gDX7zXdnZKbl9jf9skTvzW9h6BENijn//zv2qx+c84JkCHNhKhcURkQFjEpA9oiX8j4t8nvjexABVFrJgo8cpkNTVumvwLMWlnTCcEMVnkFeFaa0FJtJLacZUyrkuv8dbM+uA/3y6Aj3V2yt/GL4jfJrYXa9YY7rGq7+if3dniBu+kWDBagwy0xNhpg5b4e9UWmOIPbFWUctxuqXpJ5SniZTyunfL6STtvmm1YMXW2gjmJcZFJMMoxQgorc2k1EIq71zinvP0Lf/qnfmUt/qsEMP6Gd955Z/YW/8Xv1bvR9SZfjIiskmEUJ05CgnmZtxDVIY+dEvPb48yMTbTXGIsjBUiJ1QaEiAVRCYGmhEWIJAdg8m47btcIxAnt3MSzjSNBilBmU+5QKB9f78y68YYPrBn+TYUgftPFv/euu2ovLWz+aZ0KLjbFciRC64gwqlLLaTwfLx/Lx78z0z5RG4uSAjIpTKDpK/q0Zd0EGxJTjHvFAVSMjgVMsiulACkSvGh8z9kEYrIWIQRSiBMEX7FyWSVCmfXcsVA8+4huuebGj/zdwG8iBPFr23wh+Mqdd2ZuKW55oF4GF5lSEIrIurG9f6XO9eXw0Sm7gWRRHEVBCz67bitff2oXfb7PDacv4JuvPw8V6sR/VGfBsSIYazHW4DgSPA+UAmsxQUQ5MlgBKSlwPBeUjCURRhBGGGOTzSyQU27TSoERIlJp1xk2auO9pfYr37FmzfCv6xPEr7X4N98sxerVDHU9em+DZ67TBT+SFWcrfgfgdFXcmXwZaxCu4EjRcvVXHmR3VOaN7zuXUhDx/c/9gvveehXXLG1Hl3yUqsoKrMAag/IcSHkMjpZ4ZPcxHtp+mOcPD9A9UqAYxeF8Wglac1kWNtdyxtxmLl40i7PmNNOY8+JtEWis1ujEhMV7w2CFIBIqStVknOHArL/1SObq+5uawl8nOnJe8frcfrsSa9dGfWc339WQMdeZvB/KiuaLV2Bbpos3eNmMrOJ7HY93fu8RBmc4fO977yDVaHjg8X1k59Rx14adXLOsI1GSZGmsRQkLtVl29Y7wdw8/zfc276XkKuYta2PptQs4d3ErTS1ZpIR8XnO0a5g923tZ/+JBPrH+RZpzTVy0sI3fW9HO5QtamFvr4Yw7EJ1A4gKUqxzKftTgOqu+01b8lvjoF26xrHJgvX4l9kC8MrsfJx6HPvnuv5pTIz5jCuVQRNoVkT4u/R8P+ybFldNlpmLK76oBZhvDA8bG8P5IaGn427v58zuuZ+mqOp54YifZhhxPP9DL3h/sYf+HbqAl7WK0xRiDk1L4VvLRh7bwuZ+/wKyTZ/Kmd5/HhdcsZOHJTUhX0j/cR744FqPX0sFzPBzp4pcMPQcLbHlygKce6+LFjd2IfMiKGTVcsqiVc+c0Ma8uTa2rKGjL3qECJ9dnWd5aE5JOuUfy4Sc71nzjo+OJ6W8tgPHUe+cn3n3FgpR+2NVRpEOjZBQKwa8OAY+Lz6dgMJO/5HHRozEGmU1z63ee4PHSMH/++cvYtv8Q2Wyag7sC7v/cM/zk1ku5bnkH5XyJdC7NzsESN339EXYGPh/+9HW85talFKNBjvYdo79HUlurGBjoRZuokngZA56nUI7L7DmzaWysRVmHod6Qlzb08uwTR3hpUw+DxwqI0OAJUClB73CBv1q1jM9cvtSGRV+7mbRzIJA3Lui860evBLZ4WRPU2dkpWb3GPPLJP2mbLce+5VpjtTZS6kgIUQUDiBNnRKKSrCa7ojrMs1OFMJElVKq/QiCiiM/feB7zP3E3T9/XxYprZrB/bx+Ns7PI1gy/2N/La1fOIZ1y2HB4hKv+5T4Wvno+931jNTo3yi83PYWSlo2bitRkJUuWpFGOQsnYaRhtSHmKYz0RBw7kKZe6kTJEG0s66zHn7BzLVs0nLC1krF8z3FticCTi4e/uIXxB85ZTZkGpLACJNWaW59z13Cc+uImb7zj0qyIj+bJmf/k2IQT2dFG4M5txZ4WhNSK0Mi5MCSwSg8LgYMcvcfwlhAvCBemBdEA48XepsEJghUjKiLLqUiAUQjoEoWFGbZqPX30OP/72ZtJRGjel8FKShlk1PH9kEOEqtg6UuPRLP+XMa5fxxXtvYc/Adp7csIV0SvL8CyXyRcOKlbWEAVhrkrKmIZ2SHOzyeeaZYZYvr6GmHlIZl1yNh5SWvqPDbN96iP2HDzEU9ZCvLdA9Msa2l3r5w/MWs3xmLVFkcZBSh9qmXNs0P+z/msDC8m3i5SyN+FWm58Cn3v3meRn1LV0uR/iRI7WOF6wqTxTT/CkrbOIbxImBg+n8xXiWVMEgLCaGOyhJxZw1d3P1X5zPnHNrONw9xtP3HyG1oZ9nP3wTp3/6HjLLW/n0d69n046XCMshtTUuA8OWJzeM8vuvbQWh8X1D6Fu0AW0MpRKs/8Uwrzq7mVzWUixEICD0LaFvsAjctCJb5zGSNwz0W57++h5mhopfvvNCMjqaiCOEwCoVqYznHBwuv3/+p77zxZczReJEpud24OfBYPPZubGtGY9mXY6QkZbHBzL2t0A0XgZCnvIVGYNbV8sf/NvPuY8x3n77eew80Mf2pwYYe/AwqxZ3cM+eQ/zL/W9mT98uosCQy7kYI7jvoUFyOY/6esmxYwGRtoS+pVjQZDISqQSOJ0lnJGHZ4EqJciW5jKKmVlHXFO+2/n7NqC849MAx9m7o5dG3X8h5bVmMHydv4wGEkcoqR9qyIb+xZFZe+Hff7uL2TjGdKXJOaHpuXqt7PnbbxzOZVKsu+FpFVtlJ+Hq1A7C/4dInEEOSgY7jQFNBszgfABOE3HDqfO6653EKgwFCCWrrMmzPF/nGs9v5w4+/hn5zFGOg6Et27CjSddhnrGQJdUBoFK0zU9TkFOmU5PDBMkeOlTn9jHraZ7oUyzqO8e1EKVoqSxBYDh8NsK5L/4YhXnziCF+98WzOm1VLVAxxpJx0v9JoYUJMuiZdd0oU/J0QvNGu3iZfkRO+Z/Vqxc1rzZaPvm1lY8q+S5dDI7SVJCl6NZg1CeuqBt2ryrO2Au1OOB0pBELKSvlWKhFnocqZMD8VmCDBCKKYhnLGnGbSIRw9OIKa6eBkFGEUMXNOIzPPSLNz1zD79gcc6fYZG9K0d6S4/IJaUimQQsYQlbZobVhxag1tHSm27RhlLJ9h3pwMQWDQxsT3hWBsDHoHI2TGZeiZEZ7+yT5uv2ol71rZQVj0cUQC102tL2AVpcDUZ9w3vPjXb/ui+OQ3nrSrV6txRsgJBbA6WcYhT3zCTbtOlC9rEWlpKzo7xYRPAMtYbAzfEn9YKUWc+isxEe0YSxBG5MsRTZ6DtZYD+SLb+0fZ1jfC/qE8g4USkYWco2jJpemoybC0qYbFdVlacmlmei49hwt0zG7GJvjOyRd18OyWAXZtH6OhJcUpKxowxnCsu8jWF/MsXVGD4xgC38YCRyACQ2OjyzlnNfLiC2P0HwtYvKSGbE4ShtA3GDEwYnA8h75H+9n4wEH+5oqVdL76JHS+hDMOf5gqX1aB0Q1GS+t4yDk2+lvgMpYtsy+7A+5ZvVrJtWv1Cx95x9k1nrzelEMjIqMqqGVV1Wj8/cZRZyUFQslYkwG0YbQccTifZ99Ikf0jRQ6OlOjKl7FWcHpDhsLYGD/Z1cWL+VL8GtejrbmeutosjpT4+ZChI0MMDY+BjmP2cxtrGQlDCoNlwhCiwJBOpyjV5RjriWifW0fzDJdUWpBOOzQ119PdVeb550ZYuCBHfZOL1hPZe1Q2KGDFijp6jgbs21+itt7BWIEWCg/Fzh8dZt/mPj519an8n1ctRBdK8W7CHG99q5JMYbSiFJjatHPp9g/cfKlYs+bxqQ55kgBWr4ab10K7Cv7ScTPSBDpSWsuJqCdR4kQOSkqU68SeP4g4MFRgc/8Ym3pG2T4wRtdYmZFygK+TbS0VjpKocoEfbxnGVw6XnH8ad1x2LhecdhKLZjbR7DmxVkUGgoBQG/pKETuP9LNuyw5+/MvN9G/ZTWNPgXm4hKMh5bLPnl8e4pQL5lLbmKYUGYrDGteBTEbQ3pGmJuvQfbhIKbQ0t3gV0NQCQWTxfY11FW4mRSGIHXBhT56N9+4nVYLvrX4VqxfPqFr8E1AzJlXdNMZipevSmnb+CnicrZN3gZgKM298/y2LVrS4W1NKecaPENqKScUQa5FKgqcYGiuz4dgQv+geZkvPCAdHiwz7YQU6TitFSgk8KWhMpxj2AzYd6qKuNse7brmaP3jjNSw+eR4EZejtgZ5ewmN9RAOjyNEyyoB0XWQmA3U10FgLs1r5o8/dzb8+s5FMfYrh/cO0tzXTpC0v9Q+SmtfAikvm0760BZl2iEKDNRrHESgF+XxINqNwPUkYaMLIxjwwIXFdhdCWwf1jbFu3l6G9Za5fsZB/uGI5J2UVUTlEKTmZDzYlcquuN4CNQ3bHsVpK8+KgOfOsz3/rhXtWr1Y3J76gagesk4Bpr1XvSGW9lCn4Edo6FoEwNrHvoFyHw/kSn//5fh471E9PvgxYUkqRciRNKTfWKpPETNbieil2DgzTPTjAu269lo/98c3MmdMEBw/iP/4QtlRCRSHSGJQAp1ZhpQt9ZURoMHmf6OgAXk2G/Rt38MTGrfiDJa5Ytpx3/sWVXPKqFdSNDLHuew/x1Yef56fffonnGlzal86gY+kMGjvqkLUx3JyrT2EiSzmwWOPERe1I44+W6d43yJ7nuikfHOG05ia+88aLuXZ5B5R8/IKPFBJrpmq6OI5cMbEvBMIIrDbazaacOTX+e4A/Xr2sV0x9tRBgv/bWt6Zvmme216TV/KgYGBlZKZI/Z6xFOoqDYyVu/ekm9g8XyHkOKSVRYiLsMUz4BYklnU6z82gfuZzD1z7zAV57/UXQdYDC9heRWuNks8ixPDKKizk2Id9KazF9JcSYRmuBk03x77sP85a1j3DWOSv4zIfewatXzob+bjjag/bLqCiE3hIvvdTN2s37+I/9R9k+ViBIS9JtOWpasqSyHlJIdKDxiwH54TJ+fwGKIc3S5aJZjdywaAYHQsmuUsRr57dw2bxW2upyoA06iBKQUCTQ9OQqZ6UUNbkwZ2Tak4VA9363r3zye7+ydmS8OOckWa8UN6/V57eEl9ZkMvNN4BtlkBP7KYmBHMU/btzHweEiHTVpxkKNry2umPC949UnT4DrpXjx8DFOXTyLH3zpw8xbNJvS00+CXyZ9ymmImhqk4xId68Ju2YT03PjOhcVGBrQlsho3V8OXn93B+x78JR//s9v4mz+8AQZ68J9+ApkfxpEC6bhoAbZZsOLcmayYW8uf9Sxm11CRFwbHeLF3hD1HRuktDONHEVJKalMes2tzLD51Dl/dsgdHwp+ctZAZ0vKFZ7vYPRbw0IE+Omr2c9X8VlYvnsXZMxviylyoCY1FyarKsRVTAvRxX2ClCSOdy3gzLqsJXgN8f13nKsWa9dEkJ9yctjfhSGuLwkgrZIUjYMGRgnI5ZHPfKHUpB18bpIgrTjrh4MhEAxwgnUrx0pE+LjxjCf9x10eoVRGlB3+KymZxz7wgTgiiKA4jhwYQymCFieuyxmKLAdoPcRtqWLt5P+97eAM//OKHueHVCwk3PAZ+Eae2HjFrNlYHUMojtcEai84ozPwacs0pzujLcNZoPWJJB9pYgsigrUFIQcpz8RyJyLi84fQFXP+9dbz+vo28fskC+kLLzIyHEDDih3zjpS7u3nGEc2fW88ZTZnPt/Bmksy74UezzjgMVJ5spq2NNbnDlTcD3L1k+o5I+CQH2ntWrM9cucXfkMqm5phAaaa2c4MjEqGQp0lz9o2foKZRxpcA3Nt6OSRjqSIE1lmzKZVf/KKec1M4j//YpcjYgeGodTjmPuOAyZCqHlRKkIjq0B7V/K1KpeCv7GoqaaKCIKx0OFjSn/fO9fPvzH+L65Q34L23BS7vYhiZEXXNSTBeY/iNQysesaGuxOo7FMYIwH+L3FggHSphiCNogpEQqhXAVkRQ01aToKmsu+bfHODw8xplz5jDohwkiG39+bSyFUKOtZXlzLW9fMYfVJ88ik04EYacKYuJLg1WeK4qh6b/nyOjit3/zP4bj6vLquEPllHnizIzrzDV+ZIW1spJYJULQWpNJuyxtqmEkiLcwSVarpEBby0g5REjB0YJPbV2GtZ//IDWOwd/wc9xyAZPNxTI1EWZkEP3S06gDLyFcB+sk5i602GKIjTRGSt77gyf46z+/jeuXNeBvewGvNo1tqEfUNoHWCGuxgY+1ITgCq+J8RDoiRlStxc041M6up3FpM41LmqmZ00imuQY3l0ICKQQjxZA5GcX9t15GUybFgYF+alMukbVEFkITr0WN59CYdtkzXOAv12/jmh8+zXde7CIiDlAibdA6Zm/ENeXYfwpjhQkik/VSLec35M5PEi8pWbZMALQq51LppcBYPYmLn6iAFbF2/+kZC2hMufQWffzIkA8iBsoBWFg1t4WGXJajIwW+tubdzJnbQvmJdbiAuehqRG09ZvMG9IsbEC8+iTN4FOF5WDWOuFkINcbXeJ7LoaMDLDvnFP7ywnai3Vvx6rNYRyDSdQgRK4ApDmFGjiCI4qxbxnRExi8l4/u3BqREZT3STRmyLTlq22pI16fRkcYRghE/4pTGDN98/Sr68gXGSmVSSmFsRRXR1hIZS9qRNKZd9o0U+cDjW7nu3md5YF8PjueglJigvtiJcNVaa3AFjSl5OQBblwknyatISXFBktqK6fBShcBEhuWtddxz3dn80/P7ODRaoi2X4oKOJi6ZP4NcNsNpX36AP7hpFVe95lzKTz+D13cMs/I0RDaHjUJU6IPxEY5MzFBVWq0NNtAIYzBYZrXV8Q8XtmL6upG5FFYm/iEK4gUtDEFUQkg1kYbKGI+y46GIJG7lsxKMSaALi7UGoQ2pXIqgFKEDjaMUQ2NFrlnUxp9deDr/+IvNrJg7l8iY43BabSE0BkdK6tOSLf2jvOWBzVy/aCafuWgpzSkXa+ykkBQQhIaUNeeP57QC4I7V52Xee/Li3bmU02FKvhEWeSKU05o4HEUJTKjjpAwgm+atP93Ej/ccY899d1BfHkQ/vQE3k8Z6LtaVSB0gHBnLXMbFZCET+kBkIR9ihwIo+klUkEO0pLCeiPGkpAnJVjpmQEhZTWCZCMUMYExMMzJJVBVaCAyEJv7uG4QFHWryA0WkkhhX4CpJmK7h9H/5D0ZDaK+vx4+iSonC2HgnUIUMOCJOOI8UfF4zr5XvXnsmytoKXjb+TzquKIVm6LHuoUXX/dvPhiTABTPnLHClmEWkkUYKYVXccWIEwjDpkgh0qAnKIVobiuWQwI946eAA3964m4+99/dpnjsDuXcPqbSLdCWKCBX5WGmJdESEjXnMVQwUGzclVUBQIwWiwcO6iQmpfA6brK9AE2thqA2RNkSRIYps/LMxGBNHaLbCxqr+Hl8Wi+MqvLSDiTRCgx9qGkTE31x6FkNjIyBgNAiJjMWTcnr2Y2Lr59amWXd4gF90DSJdF2NsvHZWIJACg025buP8puziSklyhpKLPc+RaKstVhg0Fj2JVWYr0rYIAZ6rcNMe2ZoMXks9X93eTVNzA7936ekceXoTXd19HMqHHB0pMhoarOeiMh5uQwa3NoVKKcASRSYhlRM70YyKbWLOhUxMK7QWTGSJIo3RSbacUri5FF5dBq8hi1efxWvITfxcm8bJpXBSTuyQsWhriKyJGXAiFkSs1RYvE2fFVhuUhdHRArcuX8C8pgayruCvL1hGzlH0lny0taSUrLDnVBIlRQk4KQTsGSnG4aepJj9ajNZaOoJaJZZWoIi0oxbjKIwNrLWmKpuzk2iWFhtHP0LxQu8IW/pGeGFglP15n192DyKs5oq3daJDjVQx1CywOFaTcWFmrcvJM+s596Q2Llg+m5PmtOB6Aso+phQSKYvICmxzCmo9ImuQBjzXQWXS4LpQ9hkYHONQf5Gu/jGODOQZyJcohxprBY4S5DyX5po0MxtzdDTkaG/I0FqTRqbTsfkpRlD0Cf1YA4UF5SqUkugoxhpCa6kzEe87fyUfeXADP73hAt6wqI3v7jjCt7cd4sBYiQbPIa1kwr6rUlILrWk35g9Zm1hLUQnpEYKsUIsrAvCkmB9L3yJNlVOc2icnYDCCtz6ymS0jAXUtrWRrZpGbnWXVinpq6uvxA53QPSRSSqwxlMtlSuUyo2NjPDbQzw8fOIL5wUssaHK59oy5vO6cBZw2txGvNh17tzYJqVgjCSL6+/NseL6bdS8e4pk9PRwc8ikaD5WuwUtncd0UUnkYazBao3WJKBwm9EvYoERaaNpqHBa15DitvZFz57RwzpwZNDTUQMHH5H1iZExi/RCBRGIpjYyxetkiPnz/k9z14kE+cv7JfOCMhdy2uJ1v7jjMN7Z30Vss05jy8JIsdNgPWVCf5dKOJmwQxCYmcfwxVV+BFQjE/IoAhDXtGIuwVmCIs9EqYo9NsCAnnWLDwX4ePzbGZa86m55jvYTD/fQcK3OgXMJLZxgZHqZYGMPoCMd1ESI2NSkvRa62lpntc1i2+NU4bppjvT3c+exO/umRR5hbJzh3fhNLZjeTS7sUQ033QJ4XDvSx7WiBwKujrX0e8087k4vr6oiCkGJhjCgIAEsQhJTLJYQQpDNZMtksUioiY/D9Mvl8gS1DgzyxZQj/qSPUmTLXL5vDW06dy7ktDUjPJVuOGBwpIVFIKSgWSsxtaObM2W38eM9hPvKqkwmKPq0pl784ZzFvXNLOPzy/n7V7jlBKErT2mjSfv2g59SkPHQQxbDFugJK+WbTFgVlVO0C1JIaxsmBYU8XtEYm7EARGoAtj2KDMe971Jr7xze+yffs2XFdR39jE/EUnUVffgJfy2Ll9F6MjYyxavBApDKMjw+zdvZ2NT/+S+vp65i88mTNPO51Ia0pBwDOjozy6aZggGEUIQU1NHa0dCzn/tGay6Qz9vcfYv30LvceOUSzmY7uuDYEfkEpnqK2rIwx9wsAniiKUcmhqnkHrjFm4borGbI5aL0OmZjGjY8P88xM/51tbulhR7/KG5XO5ael8ZtVmCYOQsUjjhxEyDHnt0gX83fpNDBVDGl2F1gZb8mnPpPjcxct525IOnjo2TEZJrp7bSmsuhQkilFCT40hrsRiRZOKNFQFoa3JJlaW60ScxO0k5MfYmjJQDtLUcOtTFT372IAMDQ6TTKc581QWctGwlWHAcxaEDh/B9y4KTFrPyjNMB8DyPTc9uovvwYUr5ITZv2kDrjFnMbJ9HXX0dV1x+Bb1HuxkbG43TgiDEL/scO3yYndteYHRkgHkLT2LlWefQOnMW2WyO55/dRH/fAKedeTpz5s0hikLGRkd55smnKBWLDA8PM9B/jFkdC5kzew5vuOlqdu89yAOP/IJcNsvS5WcSuB6f3nWAf9i4josa07xhUQcXzWoh5wkIfM6dO4vAL/Ni/ygXt9VhdYQSAqM1NtKsaKllRVtDvHBhhA4ipJyGnVvVwuAKUXtP52rPufM973EdCllMVXnNTqkwj1MXtGF+XQarFIcOH2b3vn0opeiYM5fZ8xdSGBtDSonvl3lpyxa8lGLhSQsoFPK4jsOeXbvpOngIL+3R0DyTXG0DRw7toHlGG6Njguef28hAXy9WmzjywZJKpeg71oV0Bavf8m4ytfXoKMRzXPbt3kNf3wAds9tpbWslPzZGOp2m62A3xjrUNbRS3zSDgWOH6Dqwi5mzZrHvQDd9A8OVnKbv6FHqG5pYMn8xkVjEz48d5WcbD7BE7uHWhTO57ewazmtvQ0jJ5p4hLppVX7WecdisQ40J4iqjEiKuhU/TVxCjpjFYZI1Nb316LO2c7PsqJXFjlljVYk/pp1UIdDnk4rZ6PnvxSj72y6001Kcp+z6ZbA5jDNbGJKZd23dSLvucduZpuJ6HMYbR0VH27dmL4yh0FBHZENdLkatrZrCvj455CxkdGsLoGD+pyeUITVzN6us9ypXX3UA6m6MwMozjOPQf62HHth3U1ORYvGQxURQileJw12G6DnXhui5B4GOtpb6lnUJhhGNHj3Dvz4ZQUjE8OkCxXMZK8MtFDh0YQUpBU3097aecwUi5wMe7j/DlvY/z+6csJOO6dOWLCCkxxqKkrOAMsppiWN0gOE5XqBCYJ4L5CKP8fD5OY61JWhGThGJym88Eyi8QEEb82alzObOtkbFyiCSmmERaxwtwsIvuw93MnttBy4xWyuUyWmt2bNtJGIZxpGIM1lq0jlDKJQwDhJD09HSz46Vn2L99E1u3b0FiiaKQVCqFl8pSyBdi5FMbdu/cje+XmLdgHspRGGMoFYvs2rEzhgq0riiFMRrXSxP4JRob6ujpOYA3eJTVS+Yz0L2PHft2MlrKo5QkP5bnWHc3ohRw8txFOPOWceeuYwQ6YnPfML5QeI4zbpFPwPmzVXWB6S3K+GgFWZtK6dCYcJxkZasc7tRLCIm2AhtqGj2FtvGG0lGEsDA8OMTunbvI5nLMnTePoByX8Q7s3c9Afz9SSrTWaBMX6Y2xhGGIUopiIc/RA7u565Kzefp1l7GEgP1d+0m5btwuajRRGIIQHDxwkMG+fmZ1tNPU3ESxUERYwe6duykXywhhMSbC2uS9dCx0rGEsn8cf6OXuay7i7stfxSPXXMwHl8ymttDHrr3bOdLfg1Rx/1lfTy9RvshJcxZx2lkX8PxIyDU/eoohE1sGM97mzwSnNQYJqy8x5XvcOycNOlUTaHn2V74S+priRLP4OIdnOiEkds9YymGY0PGgXCwShhG7d+6iXCqxYOECBBIdaob6Bzmw/wBKqcriW2OwOu46CfwiNblajg30c25LA9d3tHHyvEb++LwV9B07ijEaawx+sYxE0NfTy95de8jWZJm/YAGBHyCs4EhXNz1HjiIdSRTpeNF18l7GYHSE63gMjY1yxowmltfV0NU7zIKUx+2nLeWxa1fxL+ev5OxUyOEDO9jZtZe+0UH2HjnIs5uf4cDBfdRnMqzv6uUDv9yOyqaRwqLtlJZ+W02zn9I4MQ4MSYGQojxIky+TMDQfJwdJQ6GtLi5OTsisjRHHyztaCauSta79B+g5eoz29nYa6xsISiWiMGT3rl2YKEoW3SSIZHxFYUAUlMlkcwwPD3LZzBlk5mWR5zRwyeXzqVGGfKGIlIr86AjWwK7tO/D9EnPnzcNRMX5TLBTYvXt33BOmE19kElNnkvYirXFdl9H8CIvrckigYW4N6Y4sfo2gLi1586J2fvKaC7n/6vN4a3sdJ9s8t7TX8smLz8LLD9B1pIv2miw/2N3NHRt3EQiJ4zoVMtqEqbGTuy9tMsnIjAOFksiS/8IDD/gOgB9GA7mMN7n/dhzTFRzf7WgsF3S0klJ7EMJSyOcZHt1PJpNm9uzZ+KUyynE4dOgQI8PDeK6LNboCHVoRM+f8UgHXiamFbnGMy08+k9ScLFGxxNyOOs5e0MKLA0PU5Grp7z1CFAmGBoZon91OQ30DfrGE4zrs27OXcrkc22ZtKnGEEBZrBcZGYA2el6JUzLN49hzSNQrRlkKGFmo9rIXR3jHKg0XObazh/AtOI9CWTCaL2z6ff9+2i2MDo0TGkHYkn3puF/cdOMbfnruU89sa0WEUd15O6sI9vnlCIC0IdGiGJvaKkEeS9lI7zsWMpRXTKoSxCFPp44RQs7gmxYxsmsgKyqUiYRiwYP6CuKECwcjwEIe7ulCJg9Y6tsXaWIzWgKCQH6apqYWj/b2srM1w6uwGjAc2RjJ40wVLGBjop6GxmQP7drN7905qamuYNzf2L1jL0e4j9PX24cgJE2dM7Hi1jnH/yC+jlALlokKfFY11yLSAyKCDZDKXiWFqKQT5yDBcCvDLAWO+4ehIkYFCkey4tltLynHYPDDKWx/bzNGxElKqGP83Jl6rSjBjJhJba7DWWiT4xhytCKAY6EOV51XZe0MM55rKhoi3QagNLekUZ7TWUzYGE4U01udoaWkl9H20jti3fz9aR5U2URu/OdZoRKL92IjGphkM9x3jtkXzqGtx45ZQKaAcctP5i5mVMQznCziOw9hIP/PmzsNJIOFiocD+/QdAgDF64n2SKMsmxb1ScZSaXA2FconZrsOK1ma0J0HbSnioQ01UjpAyjuVdEUMHmZp6hkJNb77I7JosMoHG/UjTlkkx6gc8eLgf4TiJD5XTdP2MN39OWBKtzcGKAHwjdqEtSgohKt0vIsmCJ5hDUsgYphJxBeqG+W2EJk6Weo4eYnhogNraeg4dOsToyAhKysQOj9dIDQiJjiKGB7uZO28Rh3qOcFZDDTeeMg/T4iC0QUpBFGoaGlO89/JldO3fy6yOuVhTJptJY0zMyzlw6BC+X660s47XYY21E0IwmqA8RkvLTI70HGXVrFbam3NYl7hIk2hqWIrrGyZZJGEl1kq8VJbDhQJlHZFznbgulDjcwFg8JSlpneRM1QGLnBTIGCQWgbICNBSs3V0RwGDo7w6DIIHqxtPl2PxIIxEmzhptEr86gPEjbpjbFucDQURjYzMvvfAM27dv4eixo7ipFEiFrLqEAL80ytDAITo65hJEEYXebj553hk0La5DZV1MAqpLITBjRT5w7UrmN3kMjowxq30uTz/1GEFQoq+3n4GBAZTjxNpf0fqEoS0EUjqMDB2luWUGkYXycC+rF81HZmMsP7YMFmsgKIWxhUYgx/sDlIdK53iuqxuA7lJIMYxwEgaIrw0FbTivtXGCIJBcZtwUaovRifmOSRpKhyF9hXBnRQDru/L7w8gcQ0qMtXbchFV/oIkr1hptICslnz33lJgYpTxmts+j91gXfmmQwmgfhdF+ivlBCvlBxkZ6GRs+hrA+CxecjBaCA3u38dnzzuKCJTNx5mQQUZI7Jr5fR4a6Godv/9FVDHTvxyCob2jkyV88xLZtz8dOTUqkdJJLJWwNQRT6DA8cpr6+jvaO+ezas43Xze3g/NYGdMYgQlPxaTrQhMUwLrAkZtgYi/QyGC/N/Xv2ckpTHZ+9+DTm12YYDUIKYUQ50rx/+QLOaG0kCkzCBWRyVGRNdXpmpZKiEEUjz/eO7QJwElJu4Z2Lb3kpm3ZnIYQRFjW5ifp4bEMJQRREXDyzkYvnzuRnO/Ziug8xo2M+M5sdonKJKIowOkJIieN4eOk0gbEc6DlKLijwz+edy61LZ+Mu9HCSVlEhJ+5dCUmQ97lwxUy+887LedO/PkJtWwcdcxYxOjzAWH6IUmHqZCyDEIJMOs3ChSeRydWzedtmluQ8PnnqClSNxXEExrcVHxAUA2xokFIlKLzCWkOqroHuYpFnDx/mj1acxJuXzuWq1np+eOAYfaWAC2Y0cPnsGUkExNTRH5XZFbYyMkcYHKWCINz+/kcfHbAW4YyTcguhebIRcaUQdiJ4stNMLqkqRZuk2nPxjEYePpjjj85cyGObd/DS0RKhkAg3FX8owOhRlA6Z4cCbO2by7pPOYfnMHN7SNI5jCcsRypExayHxVdoYPNeBYsgbVi2kxVzNB37wFFuHh6hvbqVpxqyY8KB1vDOFQCkHqRyMEBwbGWFkzw5e097KZ88+nfY6h3RrGhsYdNnEfCatCcaCOHpLkihrQCuP2sYZ3LPtJcpBwFuWL0aPFWlzHP5w2YIKQmzDCIU4DrscJzTHLUt23D9YrLAFP9oQ94J1KodtMUWuL+Lx9lB3CoS0IhmQ8Sva76QAEUW8ZlYTH/IDzjjjFD535Tnc//AmDvgh3fkC+ShCImj0PE6ur+XUlkbmzqhBNimcVgfXseC5KEeCHw/IwFqUEqhMirKvufaO+7nxjHn88evOYP2cGdy9bgf/vmM/Lw31MmzBSCduacWC0Qgd0aDg3MZ63nTh2Vw7px0nB7mZHlIbdGDRZQ0KwnIYw8dCJVqagG11jehUmq8++ywrWho4dUYDtlDGILClIO5XSQKTKbOh4u8ysRx64lFhrSTSYiDQjwGsW7dugpr42SuvzL335NadtWm3Q/uRkVjJNMCSrU67hUAbg5NLc81PNtDtSDbf8T7Exhehp0BU0BP20ID1gHYH0eDiphQ2jJAZh88+9BLGwtsvWsKMGheUohRa1u06xp98Yx39pYinP3oDC1vSMamhJCkeLrH3wCC7e4c5OlakZAyuq6h1PdoyaeZls3RkMngpgWl1yDa6EBhMqIlKEboYIRUUhkpgxouQCosiNJLGhSt4bmSYi778Bb529YW8fflJRIVyTL+sRIZyYkSOrWpROq5x3WKssEpKMVIOh760v3/xRx59dMCCiAmBcdtM4baFtz5WK93bIDJWWymqutar8elxl6AxOK5i/cEe+oKAHQf7eWxbN1csmU/+0PMI4VZYbyLZVZmMg5RxFGUBoWFRayPvv+cpOn+8ifbaFK6j6B0tMVwKuOq85Tx86/nMzxq0H/coRwrS81OsnNnGyrEWbEljihY7ZjAiacKzNmZLu4q0VIjAJBFWzKpSjqQ8Vo7r4AmAZoWDjizUNaOydXziR/9OazbNzScvwBb8OIS0dlIHzCQCbmWIXnX/dPzhhRUa5aqhsPzERx59dGC8YS9mR6+Nn3ekFP37zJx5M1jJpO4/MamRYDxJk0pytOjzzp+/gMXSkErxubWPcPlH34zKKGzeJHyY+OZURsQ3Hco4ehFgyyE3njGX685YwENdIzyzr5fhsSIL2+q5/PRFrGyrgb4edFnHCZpJogxj0EJAvUI0KYKDYRzDxw32yCSmtgaCfkOqxYIy6HKIEBCFEWEp4bhagZEq5hGpNK2z5vPIvt08tHM7X7/yAnJpl8D3cRMzJY4fy1u1NlWJV3VwYIXACNHnR/8OsC5p0oiL8mvXGgE8dnT40UVZdbg+483WvjYSJacbA0ySHTuOy1O9fQz6AbPSKTK1GR7dtJMfPrmV1y+fg//SXhwvG2uDCzIbjwiwUUwXtDIm1USFMp4QXLegnuuWtcXORRvIFzCHhrEyLpJbPUG2tNbGtBkDRCBFnIQJISbdI1ag0nFWbMox5Ub7EaURP1n82OxgBCaCVEcHfsrlLx74KQtqMrw0XOTB3d1cPW9mPFBcG+QUpztdn7mwEwMAjLFWOkoNFEsDPztw7D6AS9as19WzIqzpXOX85cMPF475wfcSkqshGU4kJpUmJ5I0bKxpFigZy0gQ0ZjL0Hn3w4zWN+G01CNcjcoIpAs2tBAmGWikEdoiIouyCddyME9wuJfgUA9Bdx9R3gcZxxjWjNMNmcCqEvohocatF3htoDIG6VqEY5GeRdVqVC6u3WIMJjQUR8pJI3ac7VokUWTRuSaaZnaw5vGH2H7sCNcvnMude7q5cf0m3v7E8xwu+jGN3tjJbLVq51gFIouJEZpaKEV/GP5wzYYNg/ae1WoycA3AJQbguZH8vxaLfiikUDF+ZCpZsMXGTDURF2JsGHHBjAZmZtP0lH18bRBKsXX/Uf5m7XrUyhWE5TCeOBXEHS9EFhECYewQbRg/JsK4XdSRKr6USjg1Mbm+cpn4bxDFC2+DiUumDKre4DQa3AaDW6NRToQNdIUfmh8oosO4oWRc+00EoVfDjHmL+eG2rdzx2KO8Z8lcthdDAOpdh2/t6ebaR5/haKkMSqBtsi4mzl9M0kNnE5KWMROXAFUsleymvuGvAKxdW5VPjf+wZv16azs75an/8rW+952x/Mz6bOYUE0U6JuoePwxLJEPwajyPV7U2sH0kTzGMOKuljisWz+OLDz7J6UsXsGJuK/6RHqTjxJprq+qm40xXM5Gqi3HtqvodxiLGp1Rpg9WJACILEdgoJpXZ0GK1wIYG40dgLCbUcRkzMowNlDAhMfUmWXxrJKFK0XzSMnbl81z/rbs4t6mWk1tbWds9SI2rMBYaUy4H8iVmZ9OcN7MlrgKOYz+TeFSTJ75bhFZuSu4fy6+79If3fdp2dsoVX/qSmb5Tfts2IYCDgf1sqx+9zplu2rKtzgMEJoo4p7mBx654FT3lMm3pFOTS7B3O86a//yZPf/K9rGhuoDw4gpvyMEl3itUxMxo1XoWzWCmS3TV5omGlP7xKaHac9ZxcooJVxYseFgPcrIeUkqAcURwsYXQy7tIoEA46glA4NM5fyoAUvP67X6NJWq6c284de3upc51KXSuyFlcKhoNwiiba43nkybDauMNUiCDSbBkt/L1I1viE84LE2rXadHbKC77x/SeP5ksPSteVNt74JxyzIoVAR3G835bJxOPUij5fv+h02uvque7vv83h5jaU8giTm9dhhA0MJjBY32ADm/gHHXfIBAl9PEge85MreY0JDTY02FDHJk3HoaUY3xnW4mU9sFAc9RnrK2ISl2d1PNcoCsEXDg0LlzPieLzua3fSPzLEYze9lgs6OlhYm2E4CAlNvPDju/bStuaY9i4m95iKaoEkBDhjpJaplOzKl568+ScPPWg6O+XUWRHHTfBYm+yCzaXy3xRLvlHx7LaELCEqZmFcG23SA2ENmEgjrcWGmpkCfnD1+YwWIq79x7sZWLgQ40NprJxENLHdNoGp2HB8G19BvNg2iP9vK8+xCbc/bmUSEYkpii8b6ng3CIEODGP9RQqDZbAKrIMxCmsdotASumnaTj6DIwauvOuf2d17jEdffx2L62q5YlYrT7/mfP7+zKU0ei7DQUg+0nx45SIuamtGBxpV5WjHS3AxDT1ZCx0HKOUwZPOY/1EBdu0U7T/hvKDxJGHXW2/6xuKG2rdGfqClQU2M5JhuTM3kGcPagOs5bCyUuepHjzCzOcdP3n0jM3YeoBiWaWitRVYNUx1vhRrXHjHN362UTK2tQhzH0UdRoayUCyGlfIDVcYYbT891sDauM8i6FmYtXcGTx45w43fuQkQ+D/7+NZzRXE+Y5AlKCITn0jNWYOPgMLOzGU5rrkdHhvGKyYnnHwm0FtrxUmrL4NC9p3//RzdMNynlhCPLbl+2zFprxUbf+chIKRxypBTj+Y+tFBk4jjFRdaQRSsajAM6uzfDY669keLjM+Xd8i02tjdTl6ujbP0h+LKjQH0WMvmHHNblyRXHDXqjjx6JxtoOtcHNE0j5VHPMZ7ilSHAlBK0QCLRhcdAR+aMm1L6JlyWn886anufjL/8C8jMfTt7yOMxrrCMoxmVYKgQECP6Atk+K1c9o5rakeHeoqpr9k8syYiZ+1EdaRDn2FYvG+ocJfWhDTTUp5+ZFlicReeNdt71mZSd1p/HIUO+1fb0KWthbXddjrh9z00JNsPnqEf7rlKt7Z0kJp/xECCZm6FF5GoVyZlPxsAq+IWNurUnBRPWrYQORr/FJEWI5rwDH6KuPuKxFHMGGgcWsaaFmwmL1hxF/cfy8P7HiRd6xYyhcvOpcMljDUVUzmKZMbE2BSvoLhtBawEZGTSjmP9vR96Iof/uTvT6T9v3Js5fgLD7zrtgfnpd2roiDQ0lZ6Gk8giuN/q63FVYphBB/YuJVvPPc815y5lM+dfwYLh4sMDY+hlcRLKRxPoTyBchRSUclsrQWbDFrSoSUKNFEYh5+GGJWMVyzuyhtfeCeVoXn2AvJ1DXz1+WfofPinZAV8+fKLedNJ87B+3PEipTjxmTS/xiRordGu56kdo/mnTunuvdjOmGHF2rXmRH/u5SfnLltmLYivR+G7riuZ51tdp1HryMSfUpzgNIcYj62eaaGEINKaBiH4+vmncllHG3/02JOcuusgt190Nu+aOYPmgs9oyadQ1kghkFJOcMRImq8TrZ9MjpVxNp5ktsaAiSJSqSyN89op1jXy7f17+OS/fY2uwX7euuxkPn3eWczKpIhKpZgEIMR0/SgnOEMoSeLExGQOm0wJCLW1nlCiv+Tnf14M3ybWr4+Ij8Syv/Hg1vHRKg+9ZfXvXZzN/kdKm0hjlZg0svyVac64C3c8jy4/5K83buXbL2yjo6WO/3PaKdw4o5XGyFIMAkrGVNjHk06KsZN9jbYiJnZrgysV2WwtqeYZHHE9frBvN1946gm6B/u5bPYsPnn+OZw3swUCnzAyk0zOK9X76Xd9fA/Cisgq5Tw8OPLma39w73dezvT8RqOLt7zjjWtOzWY/RrkUGnAnssAqLPwVzKvXNl4sXIcn+kdZs2krj+07QEdDDe8+aT6vb2tlQSaNNZZiGBEmjXXCymQ6WNIyYiWedEh5KWQmR7+b4pmRUe7Zs5Mfb3+R0C9zzbzZfOisU1k1qw2MJgyCeOBSRaonGJ06pUto2tHAwlZmVqMJVSrlbhot/ONZ//b9Dzy+apVz6fr10e9qerqwq1YpsX59tPudb7r7pHT6DbrsR3Ffo6mqg06d8S4mhDLlnUyCLTmOC1Kxrn+Qz724i58dOISL5eq2Zm7omMUFzc20pTK4ySEO8ZaQaKkYRdIVaTaODvPQ4cOsO3SAQiFPezbFbUuX8Pali1naWA9R3DRhq+Y+THs8ip3QbyEmT3ecYB5ORuCsEBhN5Hqes7VY/tmK79x9vV29WhIjzPZ3N74eBJ2dYvm2bc79takH56ZTl2jfj4TFSYDfybXRKo2vDLypmu0//oi2cWTjOA4oyYtjBb6zv5vv7z/EwaERah3J6fX1nFVfT3s2TTHUHCoV2Vkosn10hMGxMcCysK6G6+bP5caF87lgRkv898KQMAyxQuAk2ao4gbmxv8LM2GlGaQoE2hC5qZSzo1B89kOjxcv/48c/zvOrj674zQ5w6OzslB9fs8b81XveU/8HYeGR+enU2VEQRMLixK3TTPqItooj/KuCVx0z9nAcBcqhHGmeGR7lviO9rOvpZ8/oGPkwRAG1rmJuNsNpjfW8qqWJC1ubWVpXC46CKMKEIaExMZFMTD2JWEw7SN9W9bCc6PC+aex+5Hqus6fsb7tjrHzpnT/6Ua/5NU/R+I2PMPnUm9/cfJsnHpiTcs7W5XIIwhWc4CyX48emn/CUnZheSIy/KBVfxjAQRgyHEVmlqHccsq4TF26MAa0xUdylGB+mKqqqU9MsY+JDxCRY305/xkH1fP7xAkvcgB25nufsK/vb7i2FV31w7dru6llw/yWH+Hz4jW9s/IOU/OG8TOoSUy6HFlz164ZGTF9xs1XjOOPjgeXERDwbJ0cmiUllcubLZIr4NAGlmPKRpx5AeVxHXYK4VpVjNQJjY7Ozs1h+5rPDY7/3rz/5Sc9vsvi/1TFWnclZKfNWrUo/sHDON5Z6qVsIfB1aKx2ZTFIe53RN5c+Lybo/WT5iUpl7gpMhJpygqMZQjl84UWWtj8PTJw2BtMex70UVkXzqyWPaWCsRRqU8ta3k/+SDfYO3PfDAA6O/6eL/1ge5jfsEC2x+862fWOq6H01hCazRTjzGtcJWm/5ATVE5+S6GHSa35dvKQW9iuhp4chCcrYqCxbSfsDLf3drpDyabdkOK8QNjYqKWsdqVQmmp2Fwq/39n3/39Dwqw/20HuU2NjsSaNea+N62+6Ww39eXWlNdiwiDSxio36bsX1TqWnOpghZ0+dageQW2Pt19WHH8c2csek3UiEyhe/uEE1bXCCq08x+kLo9EtpeD9V95zz7dsZ6dkzRor+G88ynA63OjOW25ZdHna/dKilHcVYUhkjJZCKDnN+b7THsw89UQCO93RkVPGIB1XkTqus+pl9H3KYUJJ7hIznNGOEArXZWfZ//kv/fAP3rl27bbks5rf9tCu3/1xtlWp9xM33/T+kz3n423pTANhYHXMo5g0027ikGVbqa1WEfmOc8yTTYqdYq/tCTRZTMlImDjy3NrjBJSMrdcOVuCmZL9fzm/x/b+9Yq38HKzVrzTDfaVf6ncpgDXbttnOzk65bv165m/d9rQzp21to6W5zkudlvZSUmgdj2WtTGQUk5ObqQX7EwNKTAqTLK/wshVazdTHrBFYK7SDQHqeKiHFznJp7fcLpTe95Yc/uleyzX6ss1O+/Zvf1PxvONK8WlPufePNF5/upf66DXFVWikIQzQ2sslIvVcWqorfxY4/LkLVyQAuB6GE61LWEd1Gr9samk+97nvfe3jqzuZ/y5nycZQUHwM+nhl+6/rrr1zqyD+Zl8q8dkZNTqAjjIl0QiCW8hWcx/fbisFOTD4zMeytFI7DULnEYT946Pl84Qtvvf/+n47nO7fD7/wY8/8yAVRD2qvvuceIOCCi87LLznxtc/PbZ3nOjR2e1y6kAq1BG6OFNQiENVaKCg/4Vxws/DKetmpKvcFiBUIqpSQqfs/Dvt97LNL3Pjs29vX3PfDAhvFjG9fefLO8+T9J6//LBTBJEMuW2fEdMXflysZPd3RcPdtxbuhIp1fNy+banJRbdVygthprrLWJtxDCWiMmuGFVP1WcSUzKGYfepBAKIUQ83FoSRRFHS6X+QR39fHu+/KPP9ffc/9xzz/WPa/zabdvEf8XC/7cIYNIpTdu2iWq7Wjd7dtOXTln5qtmZ1GWtnnt+o6OW1Tqqscb1JoxT5ciOKr2ufApZ6VmopMnGUAgDhoJgeETrHYNBuOFAqfTYP+zfv2Hznj191dEbVYrxX/n13yKA6iRu7erVcnVCCqt+7PKlS5uvmznzpLmZzJIcLK53U/MalJolBE1SUusKUr428cQvIbUQsuwbm6913aHhMDhaNvrg0SDYvd/3d37/4ME9v6ha8HFtZ9s28Upx+//nvyyIe1avVnbVKsda+6sUwwPqoL4xvqgDUr/qOF67apVzz+rVyv43K1711/8FelHunJggHxsAAAAASUVORK5CYII=';
 
   function initSpotiFiak() {
     if (document.getElementById('sf-bottom-nav')) return;
@@ -56,7 +56,9 @@
     });
 
     // ── In-App Update State & Handlers ──
-    const currentAppVersion = (window.SpotiFiakNative && window.SpotiFiakNative.getVersion) ? window.SpotiFiakNative.getVersion() : '1.2.0';
+    const currentAppVersion = (window.SpotiFiakNative && (window.SpotiFiakNative.getAppVersion || window.SpotiFiakNative.getVersion))
+      ? (window.SpotiFiakNative.getAppVersion ? window.SpotiFiakNative.getAppVersion() : window.SpotiFiakNative.getVersion())
+      : '1.4.1';
     let latestUpdateInfo = null;
     let isCheckingUpdate = false;
     let isDownloadingUpdate = false;
@@ -74,26 +76,52 @@
       return false;
     }
 
-    SF.onUpdateCheckResult = function(info) {
+    SF.onUpdateAvailable = function(latestVersion, releaseNotes, apkDownloadUrl) {
       isCheckingUpdate = false;
-      latestUpdateInfo = info;
-      if (info && info.isUpdateAvailable) {
-        showInAppToast('Mise à jour disponible 🚀', 'La version v' + info.latestVersion + ' est disponible !');
-      } else if (window._userRequestedUpdateCheck) {
-        showInAppToast('SpotiFiak à jour ✨', 'Vous utilisez déjà la dernière version (v' + (info ? info.currentVersion : currentAppVersion) + ')');
+      latestUpdateInfo = {
+        isUpdateAvailable: true,
+        latestVersion: latestVersion,
+        releaseNotes: releaseNotes || '',
+        apkDownloadUrl: apkDownloadUrl || 'https://github.com/SatanMerde/SpotiFiak/releases/latest/download/SpotiFiak.apk',
+        currentVersion: currentAppVersion
+      };
+      showInAppToast('Mise à jour disponible 🚀', 'La version v' + (latestVersion || '').replace(/^v+/i, '') + ' est disponible !');
+      if (panelOpen) renderPanel();
+    };
+
+    SF.onNoUpdateAvailable = function() {
+      isCheckingUpdate = false;
+      latestUpdateInfo = {
+        isUpdateAvailable: false,
+        latestVersion: currentAppVersion,
+        currentVersion: currentAppVersion
+      };
+      if (window._userRequestedUpdateCheck) {
+        showInAppToast('SpotiFiak à jour ✨', 'Vous utilisez déjà la dernière version (v' + currentAppVersion + ')');
         window._userRequestedUpdateCheck = false;
       }
       if (panelOpen) renderPanel();
     };
 
-    SF.onUpdateCheckError = function(err) {
+    SF.onUpdateCheckResult = function(info) {
       isCheckingUpdate = false;
+      if (info && info.isUpdateAvailable) {
+        SF.onUpdateAvailable(info.latestVersion, info.releaseNotes, info.apkDownloadUrl);
+      } else {
+        SF.onNoUpdateAvailable();
+      }
+    };
+
+    SF.onUpdateError = function(err) {
+      isCheckingUpdate = false;
+      isDownloadingUpdate = false;
       if (window._userRequestedUpdateCheck) {
         showInAppToast('Mises à jour', err || 'Erreur lors de la vérification');
         window._userRequestedUpdateCheck = false;
       }
       if (panelOpen) renderPanel();
     };
+    SF.onUpdateCheckError = SF.onUpdateError;
 
     SF.onUpdateProgress = function(percent, downloaded, total) {
       isDownloadingUpdate = true;
@@ -116,12 +144,6 @@
       showInAppToast('Prêt à installer 📦', 'Ouverture de l\'installateur Android...');
       const progText = document.getElementById('sf-update-progress-text');
       if (progText) progText.textContent = 'Téléchargement terminé ! Installation...';
-    };
-
-    SF.onUpdateError = function(err) {
-      isDownloadingUpdate = false;
-      showInAppToast('Erreur', err || 'Échec du téléchargement');
-      if (panelOpen) renderPanel();
     };
 
     // ── In-App Toast Notification ──
@@ -156,16 +178,18 @@
     // ── 1. Mobile Bottom Navigation Bar ──
     injectBottomNav();
 
-    // ── 2. Spicetify Mobile Panel Bottom Sheet ──
+    // ── 2. SpotiFiak Mobile Panel Bottom Sheet ──
     const panel = document.createElement('div');
     panel.id = 'spotifiak-panel';
     panel.style.cssText = `
-      position: fixed; bottom: 0; left: 0; right: 0; top: 100%;
-      background: rgba(10, 11, 16, 0.98); backdrop-filter: blur(28px);
-      z-index: 99998; transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: fixed; bottom: 56px; left: 0; right: 0; top: 100%;
+      background: rgba(14, 15, 22, 0.98); backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      z-index: 99999; transition: top 0.32s cubic-bezier(0.16, 1, 0.3, 1);
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: white; border-top: 1px solid rgba(255, 110, 110, 0.25);
+      color: white; border-top: 1px solid rgba(255, 110, 110, 0.3);
+      border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.7);
     `;
     document.body.appendChild(panel);
 
@@ -179,7 +203,12 @@
     function togglePanel() {
       panelOpen = !panelOpen;
       panel.style.top = panelOpen ? '0' : '100%';
-      if (panelOpen) renderPanel();
+      if (panelOpen) {
+        setActiveNav('sf-nav-spicetify');
+        renderPanel();
+      } else {
+        updateRouteState();
+      }
     }
 
     // ── 3. Spotify Header & Panels Watcher ──
@@ -377,65 +406,53 @@
       else if (currentTab === 'custom-css') contentHtml = renderCustomCSS();
       else if (currentTab === 'settings') contentHtml = renderSettings();
 
-      panel.innerHTML = `
-        <div style="padding: 18px 16px 0; padding-top: max(18px, env(safe-area-inset-top));">
-          <!-- Header with Peach Branding -->
+            panel.innerHTML = `
+        <div style="padding: 12px 16px 0; padding-top: max(12px, env(safe-area-inset-top));">
+          <!-- Sheet Drag Handle -->
+          <div style="width:40px; height:4px; border-radius:2px; background:rgba(255,255,255,0.25); margin:0 auto 14px;"></div>
+
+          <!-- Header with Official Peach Logo & Title -->
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
             <div style="display:flex; align-items:center; gap:12px;">
-              <img src="${PEACH_LOGO_SRC}" style="width:42px; height:42px; border-radius:50%; box-shadow:0 4px 16px rgba(255,110,110,0.4);" alt="SpotiFiak" onerror="this.style.display='none'" />
+              <img src="${PEACH_LOGO_SRC}" style="width:42px; height:42px; border-radius:50%; box-shadow:0 4px 16px rgba(255,110,110,0.45); filter:drop-shadow(0 2px 8px rgba(255,110,110,0.3));" alt="SpotiFiak" />
               <div>
-                <h1 style="margin:0; font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#ff6e6e,#ffa07a); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
-                  SpotiFiak
-                </h1>
-                <p style="margin:2px 0 0; font-size:0.72rem; color:#a0a0b0;">Spicetify Mobile • ${totalAddons} addons • ${installedCount} installé${installedCount > 1 ? 's' : ''}</p>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <h1 style="margin:0; font-size:1.45rem; font-weight:900; background:linear-gradient(135deg,#ff6e6e,#ffa07a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.5px;">
+                    SpotiFiak
+                  </h1>
+                  <span style="background:rgba(255,110,110,0.18); border:1px solid rgba(255,110,110,0.35); color:#ffa07a; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:10px;">v1.4.1</span>
+                </div>
+                <p style="margin:2px 0 0; font-size:0.75rem; color:#a0a0b0;">SpotiFiak Hub • ${totalAddons} addons • ${installedCount} actif${installedCount > 1 ? 's' : ''}</p>
               </div>
             </div>
-            <button id="sf-close-btn" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.08); border:none; color:#ffffff; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+            <button id="sf-close-btn" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.08); border:none; color:#ffffff; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;">
               ✕
             </button>
           </div>
 
-          <!-- Search Bar -->
-          <div style="position:relative; margin-bottom:12px;">
-            <input id="sf-search-input" type="text" placeholder="🔍 Rechercher thèmes, extensions, auteurs..." value="${searchQuery}" style="width:100%; height:40px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#fff; font-size:0.85rem; padding:0 16px 0 16px; box-sizing:border-box; outline:none; font-family:inherit; transition:border-color 0.2s;" />
-          </div>
-
-          <!-- Filter Pills -->
-          <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-            <button class="sf-filter-pill" data-filter="all" style="${filterPillStyle('all')}">Tout (${totalAddons})</button>
-            <button class="sf-filter-pill" data-filter="theme" style="${filterPillStyle('theme')}">🎨 Thèmes (${themeCount})</button>
-            <button class="sf-filter-pill" data-filter="extension" style="${filterPillStyle('extension')}">🧩 Extensions (${extCount})</button>
-          </div>
-
-          <!-- Sort + Navigation Tabs -->
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-            <div id="sf-tabs" style="display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; flex:1;">
-              <button class="sf-tab ${currentTab==='marketplace'?'sf-tab-active':''}" data-tab="marketplace" style="${tabStyle(currentTab==='marketplace')}">🏪 Boutique</button>
-              <button class="sf-tab ${currentTab==='installed'?'sf-tab-active':''}" data-tab="installed" style="${tabStyle(currentTab==='installed')}">📦 Installés</button>
-              <button class="sf-tab ${currentTab==='custom-css'?'sf-tab-active':''}" data-tab="custom-css" style="${tabStyle(currentTab==='custom-css')}">✏️ CSS</button>
-              <button class="sf-tab ${currentTab==='settings'?'sf-tab-active':''}" data-tab="settings" style="${tabStyle(currentTab==='settings')}">⚙️ Réglages</button>
-            </div>
-            <select id="sf-sort-select" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#a0a0b0;font-size:0.72rem;padding:4px 8px;outline:none;cursor:pointer;margin-left:6px;">
-              <option value="popular" ${sortBy==='popular'?'selected':''}>📈 Populaires</option>
-              <option value="rating" ${sortBy==='rating'?'selected':''}>⭐ Notes</option>
-              <option value="name" ${sortBy==='name'?'selected':''}>🔤 A-Z</option>
-              <option value="newest" ${sortBy==='newest'?'selected':''}>🆕 Récents</option>
-            </select>
-          </div>
+          <!-- Top Update Banner if update available -->
           ${latestUpdateInfo && latestUpdateInfo.isUpdateAvailable ? `
-          <div id="sf-top-update-alert" style="background:linear-gradient(135deg,rgba(255,110,110,0.22),rgba(255,160,122,0.16));border:1px solid rgba(255,110,110,0.45);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:1.2rem;">🚀</span>
+          <div id="sf-top-update-alert" style="background:linear-gradient(135deg,rgba(255,110,110,0.22),rgba(255,160,122,0.16));border:1px solid rgba(255,110,110,0.45);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:1.4rem;">🚀</span>
               <div>
-                <div style="font-size:0.8rem;font-weight:800;color:#fff;">Mise à jour v${(latestUpdateInfo.latestVersion || '').replace(/^v+/i, '')} disponible</div>
-                <div style="font-size:0.7rem;color:#ffb0b0;">Installation directe en 1 clic sans désinstaller</div>
+                <div style="font-size:0.85rem;font-weight:800;color:#fff;">Mise à jour v${(latestUpdateInfo.latestVersion || '').replace(/^v+/i, '')} disponible</div>
+                <div style="font-size:0.72rem;color:#ffb0b0;">Installation directe en 1 clic sans désinstaller</div>
               </div>
             </div>
-            <button id="sf-alert-update-btn" style="padding:6px 12px;border-radius:8px;background:linear-gradient(135deg,#ff6e6e,#ffa07a);border:none;color:#fff;font-weight:800;font-size:0.72rem;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(255,110,110,0.35);">
+            <button id="sf-alert-update-btn" style="padding:7px 14px;border-radius:10px;background:linear-gradient(135deg,#ff6e6e,#ffa07a);border:none;color:#fff;font-weight:800;font-size:0.75rem;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(255,110,110,0.35);">
               Mettre à jour
             </button>
           </div>
           ` : ''}
+
+          <!-- Elegant Segmented Tab Bar -->
+          <div id="sf-tabs" style="display:grid; grid-template-columns:repeat(4,1fr); background:rgba(255,255,255,0.06); border-radius:14px; padding:4px; margin-bottom:14px; gap:4px;">
+            <button class="sf-tab ${currentTab==='marketplace'?'sf-tab-active':''}" data-tab="marketplace" style="${tabStyle(currentTab==='marketplace')}">🏪 Boutique</button>
+            <button class="sf-tab ${currentTab==='installed'?'sf-tab-active':''}" data-tab="installed" style="${tabStyle(currentTab==='installed')}">📦 Mes Addons</button>
+            <button class="sf-tab ${currentTab==='custom-css'?'sf-tab-active':''}" data-tab="custom-css" style="${tabStyle(currentTab==='custom-css')}">🎨 Style/CSS</button>
+            <button class="sf-tab ${currentTab==='settings'?'sf-tab-active':''}" data-tab="settings" style="${tabStyle(currentTab==='settings')}">⚙️ Réglages</button>
+          </div>
         </div>
 
         <!-- Content Area -->
@@ -446,38 +463,6 @@
 
       // Bind close button
       document.getElementById('sf-close-btn').addEventListener('click', togglePanel);
-
-      // Bind search
-      const searchInput = document.getElementById('sf-search-input');
-      if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-          searchQuery = e.target.value;
-          updateTabContent();
-        });
-        searchInput.addEventListener('focus', () => {
-          searchInput.style.borderColor = 'rgba(255,110,110,0.5)';
-        });
-        searchInput.addEventListener('blur', () => {
-          searchInput.style.borderColor = 'rgba(255,255,255,0.1)';
-        });
-      }
-
-      // Bind filter pills
-      panel.querySelectorAll('.sf-filter-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-          filterType = pill.dataset.filter;
-          renderPanel();
-        });
-      });
-
-      // Bind sort
-      const sortSelect = document.getElementById('sf-sort-select');
-      if (sortSelect) {
-        sortSelect.addEventListener('change', (e) => {
-          sortBy = e.target.value;
-          updateTabContent();
-        });
-      }
 
       // Bind tab navigation
       panel.querySelectorAll('.sf-tab').forEach(tab => {
@@ -531,16 +516,8 @@
 
     function renderMarketplace() {
       const items = getFilteredAddons();
-
-      if (items.length === 0) {
-        return `
-          <div style="text-align:center; padding:40px 20px; color:#606070;">
-            <div style="font-size:2.5rem; margin-bottom:12px;">🔍</div>
-            <div style="font-size:0.9rem; font-weight:600; color:#8e8e9f;">Aucun résultat</div>
-            <div style="font-size:0.78rem; margin-top:6px;">Essayez un autre mot-clé ou changez les filtres.</div>
-          </div>
-        `;
-      }
+      const themeCount = addonRegistry.filter(a => a.type === 'theme').length;
+      const extCount = addonRegistry.filter(a => a.type === 'extension').length;
 
       // Featured section (only on initial view with no search)
       let featuredHtml = '';
@@ -579,12 +556,42 @@
       }
 
       return `
-        ${featuredHtml}
-        <div style="font-size:0.8rem; color:#606070; margin-bottom:10px;">${items.length} résultat${items.length > 1 ? 's' : ''}</div>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          ${items.map(a => renderAddonCard(a)).join('')}
+        <!-- Search Bar -->
+        <div style="position:relative; margin-bottom:10px;">
+          <input id="sf-search-input" type="text" placeholder="🔍 Rechercher thèmes, extensions, auteurs..." value="${searchQuery}" style="width:100%; height:38px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; font-size:0.82rem; padding:0 14px; box-sizing:border-box; outline:none; font-family:inherit; transition:border-color 0.2s;" />
         </div>
+
+        <!-- Filter Pills & Sort Selector -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:8px;">
+          <div style="display:flex; gap:6px; flex-wrap:wrap; flex:1;">
+            <button class="sf-filter-pill" data-filter="all" style="${filterPillStyle('all')}">Tout (${addonRegistry.length})</button>
+            <button class="sf-filter-pill" data-filter="theme" style="${filterPillStyle('theme')}">🎨 Thèmes (${themeCount})</button>
+            <button class="sf-filter-pill" data-filter="extension" style="${filterPillStyle('extension')}">🧩 Extensions (${extCount})</button>
+          </div>
+          <select id="sf-sort-select" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#a0a0b0; font-size:0.72rem; padding:5px 8px; outline:none; cursor:pointer;">
+            <option value="popular" ${sortBy==='popular'?'selected':''}>📈 Populaires</option>
+            <option value="rating" ${sortBy==='rating'?'selected':''}>⭐ Notes</option>
+            <option value="name" ${sortBy==='name'?'selected':''}>🔤 A-Z</option>
+            <option value="newest" ${sortBy==='newest'?'selected':''}>🆕 Récents</option>
+          </select>
+        </div>
+
+        ${featuredHtml}
+
+        ${items.length === 0 ? `
+          <div style="text-align:center; padding:40px 20px; color:#606070;">
+            <div style="font-size:2.5rem; margin-bottom:12px;">🔍</div>
+            <div style="font-size:0.9rem; font-weight:600; color:#8e8e9f;">Aucun résultat</div>
+            <div style="font-size:0.78rem; margin-top:6px;">Essayez un autre mot-clé ou changez les filtres.</div>
+          </div>
+        ` : `
+          <div style="font-size:0.8rem; color:#606070; margin-bottom:10px;">${items.length} résultat${items.length > 1 ? 's' : ''}</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            ${items.map(a => renderAddonCard(a)).join('')}
+          </div>
+        `}
       `;
+    }
     }
 
     function renderAddonCard(a) {
@@ -672,9 +679,9 @@
       const currentCSS = SF.getStorage('custom_user_css', '');
       return `
         <div style="font-size:0.85rem; color:#888; margin-bottom:10px;">
-          Injectez vos propres règles CSS ou snippets Spicetify :
+          Injectez vos propres règles CSS ou snippets SpotiFiak :
         </div>
-        <textarea id="sf-custom-css-input" placeholder="/* Entrez votre CSS Spicetify ici... */\nbody { filter: contrast(105%); }" style="width:100%; height:200px; background:#12131b; border:1px solid rgba(255,110,110,0.3); border-radius:12px; color:#e0e0e0; font-family:monospace; font-size:12px; padding:12px; box-sizing:border-box; outline:none; resize:none;">${currentCSS}</textarea>
+        <textarea id="sf-custom-css-input" placeholder="/* Entrez votre CSS SpotiFiak ici... */\nbody { filter: contrast(105%); }" style="width:100%; height:200px; background:#12131b; border:1px solid rgba(255,110,110,0.3); border-radius:12px; color:#e0e0e0; font-family:monospace; font-size:12px; padding:12px; box-sizing:border-box; outline:none; resize:none;">${currentCSS}</textarea>
         <div style="display:flex; gap:10px; margin-top:10px;">
           <button id="sf-save-custom-css" style="flex:1; padding:10px; border-radius:12px; background:#ff6e6e; border:none; color:#0c0d14; font-weight:700; cursor:pointer; font-family:inherit;">
             Sauvegarder & Injecter
@@ -767,7 +774,7 @@
           <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
             <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">ℹ️ À propos de SpotiFiak</div>
             <div style="font-size:0.78rem; color:#a0a0b0; line-height:1.6;">
-              SpotiFiak v${currentAppVersion} • Client Spicetify Mobile pour Android.<br/>
+              SpotiFiak v${currentAppVersion} • Client SpotiFiak Mobile pour Android.<br/>
               Inspiré de l'architecture WebView de SpotiDuck, avec gestion complète des thèmes et extensions.<br/><br/>
               <span style="color:#606070;">
                 📜 Ce projet est open-source sous licence MIT.<br/>
@@ -782,6 +789,42 @@
     }
 
     function bindActions() {
+      // Marketplace Search
+      const searchInput = document.getElementById('sf-search-input');
+      if (searchInput) {
+        let debounceTimer = null;
+        searchInput.addEventListener('input', (e) => {
+          searchQuery = e.target.value;
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            updateTabContent('marketplace');
+          }, 250);
+        });
+        searchInput.addEventListener('focus', () => {
+          searchInput.style.borderColor = 'rgba(255,110,110,0.5)';
+        });
+        searchInput.addEventListener('blur', () => {
+          searchInput.style.borderColor = 'rgba(255,255,255,0.1)';
+        });
+      }
+
+      // Marketplace Filter Pills
+      panel.querySelectorAll('.sf-filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          filterType = pill.dataset.filter;
+          updateTabContent('marketplace');
+        });
+      });
+
+      // Marketplace Sort
+      const sortSelect = document.getElementById('sf-sort-select');
+      if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+          sortBy = e.target.value;
+          updateTabContent('marketplace');
+        });
+      }
+
       // Apply Theme buttons
       panel.querySelectorAll('[data-action="apply-theme"]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -997,17 +1040,20 @@
       bar.id = 'sf-mobile-search-bar';
       bar.innerHTML = `
         <div class="sf-search-input-wrapper">
-          <span class="sf-search-icon-prefix">🔍</span>
-          <input type="text" id="sf-search-query-input" placeholder="Que souhaitez-vous écouter ?" autocomplete="off" />
-          <button id="sf-search-clear-btn" class="sf-search-clear-btn" style="display:none;">✕</button>
+          <form id="sf-search-form" action="javascript:void(0);" style="display:flex; align-items:center; width:100%; height:100%; margin:0; padding:0;">
+            <span class="sf-search-icon-prefix">🔍</span>
+            <input type="search" enterkeyhint="search" id="sf-search-query-input" placeholder="Que souhaitez-vous écouter ?" autocomplete="off" />
+            <button type="button" id="sf-search-clear-btn" class="sf-search-clear-btn" style="display:none;">✕</button>
+          </form>
         </div>
       `;
       document.body.appendChild(bar);
 
       const input = bar.querySelector('#sf-search-query-input');
       const clearBtn = bar.querySelector('#sf-search-clear-btn');
+      const form = bar.querySelector('#sf-search-form');
 
-      function syncToSpotify(query) {
+      function syncToSpotify(query, isEnter) {
         // Try finding Spotify's internal React search input
         const spInput = document.querySelector('input[data-testid="search-input"]') || 
                         document.querySelector('#global-nav-bar input') ||
@@ -1022,26 +1068,53 @@
             }
             spInput.dispatchEvent(new Event('input', { bubbles: true }));
             spInput.dispatchEvent(new Event('change', { bubbles: true }));
-            spInput.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+            if (isEnter) {
+              spInput.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter', keyCode: 13, which: 13 }));
+            }
           } catch(e) {}
         }
       }
 
+      let searchDebounceTimer = null;
       input.addEventListener('input', (e) => {
         const val = e.target.value;
         clearBtn.style.display = val ? 'flex' : 'none';
-        syncToSpotify(val);
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+          syncToSpotify(val, false);
+        }, 500);
       });
+
+      const executeSearch = () => {
+        clearTimeout(searchDebounceTimer);
+        syncToSpotify(input.value, true);
+        input.blur();
+      };
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+          e.preventDefault();
+          executeSearch();
+        }
+      });
+
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          executeSearch();
+        });
+      }
 
       clearBtn.addEventListener('click', () => {
         input.value = '';
         clearBtn.style.display = 'none';
-        syncToSpotify('');
+        syncToSpotify('', false);
         input.focus();
       });
     }
 
     function navigateToSearch(callback) {
+      if (panelOpen) togglePanel();
       document.body.classList.remove('sf-show-library');
       document.body.classList.add('sf-page-search');
       setActiveNav('sf-nav-search');
@@ -1082,8 +1155,8 @@
           Bibliothèque
         </button>
         <button class="sf-nav-item sf-nav-item-peach" id="sf-nav-spicetify">
-          <img src="${PEACH_LOGO_SRC}" style="width:22px; height:22px; border-radius:50%; margin-bottom:2px;" alt="Spicetify" onerror="this.outerHTML='<span style=\\'font-size:20px; line-height:1;\\'>🍑</span>'" />
-          Spicetify
+          <img src="${PEACH_LOGO_SRC}" style="width:22px; height:22px; border-radius:50%; margin-bottom:2px;" alt="SpotiFiak" onerror="this.outerHTML='<span style=\\'font-size:20px; line-height:1;\\'>🍑</span>'" />
+          SpotiFiak
         </button>
       `;
 
@@ -1091,6 +1164,7 @@
 
       document.getElementById('sf-nav-home').addEventListener('click', (e) => {
         e.preventDefault();
+        if (panelOpen) togglePanel();
         setActiveNav('sf-nav-home');
         document.body.classList.remove('sf-show-library');
         document.body.classList.remove('sf-page-search');
@@ -1109,14 +1183,17 @@
 
       document.getElementById('sf-nav-library').addEventListener('click', (e) => {
         e.preventDefault();
+        if (panelOpen) togglePanel();
         setActiveNav('sf-nav-library');
         document.body.classList.remove('sf-page-search');
-        document.body.classList.toggle('sf-show-library');
         const libLink = document.querySelector('a[href="/collection"]') || 
                         document.querySelector('a[href="/collection/playlists"]') ||
                         document.querySelector('[data-testid="your-library"] a');
-        if (libLink && !document.body.classList.contains('sf-show-library')) {
+        if (libLink) {
           libLink.click();
+        } else if (!window.location.pathname.startsWith('/collection')) {
+          window.history.pushState(null, '', '/collection');
+          window.dispatchEvent(new PopStateEvent('popstate'));
         }
       });
 

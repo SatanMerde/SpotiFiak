@@ -605,12 +605,15 @@
         // If user tapped inside a popup menu, dialog, or dropdown options, let native interaction happen
         if (e.target.closest('[role="menu"], [role="menuitem"], [role="menuitemcheckbox"], [data-testid*="menu"], [data-tippy-root], #context-menu')) return;
 
-        // If user tapped directly on a button, link, or input, let native interaction happen
-        if (e.target.closest('button, a[href], input, textarea')) return;
+        // If user tapped directly on a secondary button (menu, like), or an artist/album navigation link, let native interaction happen
+        if (e.target.closest('button:not([role="gridcell"] button), [data-testid="more-button"], [data-testid="add-button"], a[href*="/artist/"], a[href*="/album/"], input, textarea')) return;
 
-        const playBtn = row.querySelector('button[data-testid="play-button"]') || 
-                        row.querySelector('button[aria-label*="Play"]') || 
-                        row.querySelector('button[aria-label*="play"]');
+        const playBtn = row.querySelector('[role="gridcell"]:first-child button') ||
+                        row.querySelector('button[data-testid="play-button"]') || 
+                        row.querySelector('button[aria-label*="Play" i]') || 
+                        row.querySelector('button[aria-label*="Lire" i]') || 
+                        row.querySelector('button[aria-label*="Lecture" i]') || 
+                        row.querySelector('button[aria-label*="Écouter" i]');
         if (playBtn) {
             e.preventDefault();
             e.stopPropagation();
@@ -619,6 +622,9 @@
                 sr.blur();
             }
             playBtn.click();
+        } else {
+            // Native Spotify desktop fallback: double-click row triggers playback
+            row.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
         }
     }, true);
 

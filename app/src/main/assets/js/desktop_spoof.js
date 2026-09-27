@@ -381,9 +381,13 @@
         var style = document.createElement('style');
         style.innerHTML = `
             /* Force play/pause buttons to be permanently visible */
-            [data-testid="tracklist-row"] button[aria-label*="Play"],
-            [data-testid="tracklist-row"] button[aria-label*="Pause"],
-            [data-testid="tracklist-row"] button[class*="qrR_"] {
+            [data-testid="tracklist-row"] button[aria-label*="Play" i],
+            [data-testid="tracklist-row"] button[aria-label*="Pause" i],
+            [data-testid="tracklist-row"] button[aria-label*="Lire" i],
+            [data-testid="tracklist-row"] button[aria-label*="Lecture" i],
+            [data-testid="tracklist-row"] button[aria-label*="Écouter" i],
+            [data-testid="tracklist-row"] button[class*="qrR_"],
+            [data-testid="tracklist-row"] [role="gridcell"]:first-child button {
                 opacity: 1 !important;
                 visibility: visible !important;
                 display: flex !important;

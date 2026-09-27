@@ -492,7 +492,7 @@ button[aria-label*="appareil" i] {
   background: rgba(10, 11, 16, 0.99) !important;
   backdrop-filter: blur(28px) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  z-index: 9999 !important;
+  z-index: 100000 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-around !important;

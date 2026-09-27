@@ -255,10 +255,11 @@ public class MainActivity extends Activity {
                     return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(new byte[0]));
                 }
 
-                // 2. Intercept audio ads and serve silent.mp3
+                // 2. Intercept audio ads ONLY and serve silent.mp3 (NEVER intercept real Spotify CDN audio!)
                 String url = uri.toString();
-                if (url.contains("audio-fa.scdn.co") || 
-                    url.contains("audio-ak.spotifycdn.com") || 
+                if (url.contains("/mp3-ad/") || 
+                    url.contains("audio-ads.spotify.com") || 
+                    url.contains("mp3ad.scdn.co") || 
                     url.contains("/ad-logic/")) {
                     try {
                         InputStream is = getAssets().open("silent.mp3");
@@ -644,8 +645,13 @@ public class MainActivity extends Activity {
             try {
                 return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
             } catch (Exception e) {
-                return "1.3.2";
+                return "1.4.1";
             }
+        }
+
+        @JavascriptInterface
+        public String getVersion() {
+            return getAppVersion();
         }
 
         @JavascriptInterface
