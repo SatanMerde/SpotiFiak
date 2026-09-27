@@ -114,6 +114,32 @@ public class MainActivity extends Activity {
             FrameLayout.LayoutParams.MATCH_PARENT
         ));
 
+        // SpotiFiak Peach Button — replaces SpotiDuck's top settings button
+        android.widget.ImageButton btnSpotiFiak = new android.widget.ImageButton(this);
+        btnSpotiFiak.setId(android.view.View.generateViewId());
+        btnSpotiFiak.setBackgroundResource(R.drawable.btn_peach_circle);
+        btnSpotiFiak.setImageResource(R.drawable.ic_launcher_foreground_img);
+        btnSpotiFiak.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+        btnSpotiFiak.setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
+        btnSpotiFiak.setContentDescription("Ouvrir SpotiFiak");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            btnSpotiFiak.setElevation(dpToPx(10));
+        }
+
+        FrameLayout.LayoutParams btnParams = new FrameLayout.LayoutParams(
+            dpToPx(40),
+            dpToPx(40),
+            android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL
+        );
+        btnParams.topMargin = dpToPx(6);
+        rootLayout.addView(btnSpotiFiak, btnParams);
+
+        btnSpotiFiak.setOnClickListener(v -> {
+            if (webView != null) {
+                webView.evaluateJavascript("(function() { if (window.toggleSpotiFiakPanel) { window.toggleSpotiFiakPanel(); } else if (window.SpotiFiak && window.SpotiFiak.togglePanel) { window.SpotiFiak.togglePanel(); } })();", null);
+            }
+        });
+
         setContentView(rootLayout);
 
         // MediaSession for lock screen & notification controls
@@ -645,7 +671,7 @@ public class MainActivity extends Activity {
             try {
                 return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
             } catch (Exception e) {
-                return "1.4.2";
+                return "1.4.3";
             }
         }
 
@@ -811,5 +837,9 @@ public class MainActivity extends Activity {
         }
         webView.destroy();
         super.onDestroy();
+    }
+
+    private int dpToPx(int dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
     }
 }
