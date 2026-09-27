@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/logo.png" width="130" height="130" style="border-radius: 30px; box-shadow: 0 10px 32px rgba(255,110,110,0.4);" alt="Logo SpotiFiak Pêche" />
+<img src="docs/assets/logo.png" width="130" height="130" style="filter: drop-shadow(0 10px 24px rgba(255,110,110,0.45));" alt="Logo SpotiFiak Pêche - Mashup Spotify &amp; Pêche style SpotiDuck" />
 
 # 🍑 SpotiFiak
 

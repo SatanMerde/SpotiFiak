@@ -161,9 +161,7 @@
           <!-- Header with Peach Branding -->
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
             <div style="display:flex; align-items:center; gap:12px;">
-              <div style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #ff6e6e, #ffa07a); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(255,110,110,0.4);">
-                <span style="font-size:24px;">🍑</span>
-              </div>
+              <img src="file:///android_asset/img/peach-logo.png" style="width:42px; height:42px; border-radius:50%; box-shadow:0 4px 16px rgba(255,110,110,0.4);" alt="SpotiFiak" onerror="this.outerHTML='<span style=\'font-size:24px;\'>🍑</span>'" />
               <div>
                 <h1 style="margin:0; font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#ff6e6e,#ffa07a); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
                   SpotiFiak
@@ -445,7 +443,7 @@
           Bibliothèque
         </button>
         <button class="sf-nav-item sf-nav-item-peach" id="sf-nav-spicetify">
-          <span style="font-size:20px; line-height:1;">🍑</span>
+          <img src="file:///android_asset/img/peach-logo.png" style="width:22px; height:22px; border-radius:50%; margin-bottom:2px;" alt="Spicetify" onerror="this.outerHTML='<span style=\'font-size:20px; line-height:1;\'>🍑</span>'" />
           Spicetify
         </button>
       `;
