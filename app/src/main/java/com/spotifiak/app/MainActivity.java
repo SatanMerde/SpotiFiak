@@ -222,12 +222,12 @@ public class MainActivity extends Activity {
         String initJs = 
             "(() => {" +
             "  let m = document.querySelector('meta[name=\"viewport\"]');" +
-            "  if (!m && document.head) { m = document.createElement('meta'); m.name = 'viewport'; document.head.appendChild(m); }" +
+            "  if (!m && (document.head || document.documentElement)) { m = document.createElement('meta'); m.name = 'viewport'; (document.head || document.documentElement).appendChild(m); }" +
             "  if (m) m.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';" +
-            "  if (document.head && !document.getElementById('spotifiak-mobile-fixes')) {" +
+            "  if (!document.getElementById('spotifiak-mobile-fixes') && (document.head || document.documentElement)) {" +
             "    let s = document.createElement('style'); s.id = 'spotifiak-mobile-fixes';" +
             "    s.textContent = " + (mobileCss != null ? escapeForJS(mobileCss) : "''") + ";" +
-            "    document.head.appendChild(s);" +
+            "    (document.head || document.documentElement).appendChild(s);" +
             "  }" +
             "})();";
         view.evaluateJavascript(initJs, null);
@@ -245,8 +245,8 @@ public class MainActivity extends Activity {
         if (mobileCss != null) {
             String cssInjection = "(() => {" +
                 "let style = document.getElementById('spotifiak-mobile-fixes');" +
-                "if (!style) { style = document.createElement('style'); style.id = 'spotifiak-mobile-fixes'; document.head.appendChild(style); }" +
-                "style.textContent = " + escapeForJS(mobileCss) + ";" +
+                "if (!style && (document.head || document.documentElement)) { style = document.createElement('style'); style.id = 'spotifiak-mobile-fixes'; (document.head || document.documentElement).appendChild(style); }" +
+                "if (style) { style.textContent = " + escapeForJS(mobileCss) + "; }" +
             "})();";
             view.evaluateJavascript(cssInjection, null);
         }
@@ -284,10 +284,10 @@ public class MainActivity extends Activity {
             "    setTimeout(() => {" +
             "      if (window.SpotiFiak) {" +
             "        let s = document.getElementById('spotifiak-mobile-fixes');" +
-            "        if (!s && document.head) { " +
+            "        if (!s && (document.head || document.documentElement)) { " +
             "          let n = document.createElement('style'); n.id = 'spotifiak-mobile-fixes';" +
             "          n.textContent = " + (mobileCss != null ? escapeForJS(mobileCss) : "''") + ";" +
-            "          document.head.appendChild(n);" +
+            "          (document.head || document.documentElement).appendChild(n);" +
             "        }" +
             "      }" +
             "    }, 300);" +

@@ -44,7 +44,7 @@
         style = document.createElement('style');
         style.id = 'sf-style-' + id;
         style.textContent = css;
-        document.head.appendChild(style);
+        (document.head || document.documentElement).appendChild(style);
       }
       this.injectedStyles.set(id, css);
     },
@@ -103,10 +103,10 @@
         animStyle.textContent = 
           '@keyframes sfNotifIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}' +
           '@keyframes sfNotifOut{from{opacity:1}to{opacity:0;transform:translateX(20px)}}';
-        document.head.appendChild(animStyle);
+        (document.head || document.documentElement).appendChild(animStyle);
       }
 
-      document.body.appendChild(notif);
+      (document.body || document.documentElement).appendChild(notif);
 
       setTimeout(() => {
         notif.style.animation = 'sfNotifOut 0.3s ease forwards';

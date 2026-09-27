@@ -31,7 +31,7 @@
         if (!el) {
           el = document.createElement('style');
           el.id = 'sf-style-' + id;
-          document.head.appendChild(el);
+          (document.head || document.documentElement).appendChild(el);
         }
         el.textContent = css;
         this.injectedStyles.set(id, css);
@@ -62,7 +62,7 @@
         container = document.createElement('div');
         container.id = 'sf-toast-container';
         container.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:90%;max-width:340px;';
-        document.body.appendChild(container);
+        (document.body || document.documentElement).appendChild(container);
       }
       const toast = document.createElement('div');
       toast.style.cssText = 'background:rgba(255,110,110,0.95);color:#fff;padding:12px 16px;border-radius:12px;font-size:0.85rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);backdrop-filter:blur(12px);pointer-events:auto;animation:sfToastIn 0.3s ease forwards;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
@@ -81,7 +81,7 @@
       const style = document.createElement('style');
       style.id = 'sf-toast-keyframes';
       style.textContent = '@keyframes sfToastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}';
-      document.head.appendChild(style);
+      (document.head || document.documentElement).appendChild(style);
     }
 
     // ── 1. Mobile Bottom Navigation Bar ──
