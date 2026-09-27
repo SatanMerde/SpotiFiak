@@ -1,0 +1,86 @@
+/* 🍑 SpotiFiak Signature Theme — Peach Sunset */
+:root {
+  --spice-text: #ffffff;
+  --spice-subtext: #ffccd5;
+  --spice-main: #0c0d14;
+  --spice-sidebar: #08090e;
+  --spice-player: #11131a;
+  --spice-card: #161822;
+  --spice-shadow: rgba(0, 0, 0, 0.6);
+  --spice-selected-row: rgba(255, 110, 110, 0.15);
+  --spice-button: #ff6e6e;
+  --spice-button-active: #ff8585;
+  --spice-button-disabled: #4a282d;
+  --spice-tab-active: #ff6e6e;
+  --spice-notification: #ff6e6e;
+  --spice-notification-error: #ef4444;
+  --spice-misc: #ffa07a;
+}
+
+/* Backgrounds & surfaces */
+body, .Root__top-container, [data-testid="root"], div[data-testid="main-view"] {
+  background: #0c0d14 !important;
+  color: #ffffff !important;
+}
+
+/* Peach Accent on Spotify brand elements */
+[data-testid="control-button-playpause"],
+button[data-testid="play-button"],
+.main-playButton-PlayButton {
+  background-color: #ff6e6e !important;
+  color: #0c0d14 !important;
+  box-shadow: 0 4px 20px rgba(255, 110, 110, 0.4) !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease !important;
+}
+
+[data-testid="control-button-playpause"]:active,
+button[data-testid="play-button"]:active {
+  transform: scale(0.96) !important;
+  box-shadow: 0 2px 10px rgba(255, 110, 110, 0.6) !important;
+}
+
+/* Progress bar peach glow */
+.playback-progressbar-isInteractive .progress-bar__slider,
+[data-testid="progress-bar"] div[style*="background-color"] {
+  background-color: #ff6e6e !important;
+}
+
+.playback-progressbar-isInteractive:hover .progress-bar__slider {
+  background-color: #ffa07a !important;
+}
+
+/* Links & Active highlights */
+a:hover, button:hover,
+[aria-selected="true"],
+.main-navBar-navBarLinkActive {
+  color: #ff6e6e !important;
+}
+
+/* Card styling */
+.main-card-card, div[data-testid="card"] {
+  background: rgba(22, 24, 34, 0.7) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 110, 110, 0.1) !important;
+  border-radius: 12px !important;
+  transition: border-color 0.25s ease, transform 0.25s ease !important;
+}
+
+.main-card-card:hover, div[data-testid="card"]:hover {
+  border-color: rgba(255, 110, 110, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Top bar subtle peach border */
+.Root__top-bar, header[data-testid="top-bar"] {
+  background: rgba(12, 13, 20, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(255, 110, 110, 0.12) !important;
+}
+
+/* Now playing bar */
+.Root__now-playing-bar, footer[data-testid="now-playing-bar"] {
+  background: rgba(17, 19, 26, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(255, 110, 110, 0.15) !important;
+}

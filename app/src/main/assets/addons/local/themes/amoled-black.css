@@ -1,0 +1,33 @@
+/* 🖤 SpotiFiak AMOLED Pure Black Theme */
+:root {
+  --spice-text: #ffffff;
+  --spice-subtext: #a0a0a0;
+  --spice-main: #000000;
+  --spice-sidebar: #000000;
+  --spice-player: #000000;
+  --spice-card: #050505;
+  --spice-shadow: rgba(0, 0, 0, 0.9);
+  --spice-selected-row: rgba(255, 255, 255, 0.1);
+  --spice-button: #ffffff;
+  --spice-button-active: #e0e0e0;
+  --spice-button-disabled: #333333;
+  --spice-tab-active: #ffffff;
+  --spice-notification: #ffffff;
+  --spice-misc: #ffffff;
+}
+
+body, .Root__top-container, [data-testid="root"], div[data-testid="main-view"],
+.Root__nav-bar, [data-testid="left-sidebar"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+.main-card-card, div[data-testid="card"] {
+  background: #080808 !important;
+  border: 1px solid #1a1a1a !important;
+}
+
+.Root__now-playing-bar, footer[data-testid="now-playing-bar"] {
+  background: #000000 !important;
+  border-top: 1px solid #1a1a1a !important;
+}

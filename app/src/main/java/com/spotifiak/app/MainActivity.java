@@ -30,7 +30,10 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
+import android.view.Gravity;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -46,7 +49,7 @@ public class MainActivity extends Activity {
     // Spotify Web Player URL
     private static final String SPOTIFY_URL = "https://open.spotify.com";
     
-    // Desktop User Agent — forces desktop mode like SpotiDuck
+    // Desktop User Agent — forces desktop mode like SpotiDuck to unlock full player
     private static final String DESKTOP_USER_AGENT = 
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
         "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -69,7 +72,7 @@ public class MainActivity extends Activity {
             getWindow().setNavigationBarColor(Color.parseColor("#0a0a0a"));
         }
 
-        // Create WebView
+        // Create Root Layout
         FrameLayout rootLayout = new FrameLayout(this);
         rootLayout.setBackgroundColor(Color.parseColor("#0a0a0a"));
 
@@ -81,6 +84,30 @@ public class MainActivity extends Activity {
             FrameLayout.LayoutParams.MATCH_PARENT
         ));
 
+        // Native Peach Floating Button (🍑 Spicetify Mobile)
+        ImageButton peachFab = new ImageButton(this);
+        peachFab.setImageResource(R.drawable.ic_launcher_foreground);
+        peachFab.setBackgroundResource(R.drawable.btn_peach_circle);
+        
+        float density = getResources().getDisplayMetrics().density;
+        int fabSize = (int) (54 * density);
+        int margin = (int) (14 * density);
+        int bottomMargin = (int) (68 * density);
+        
+        FrameLayout.LayoutParams fabParams = new FrameLayout.LayoutParams(fabSize, fabSize);
+        fabParams.gravity = Gravity.BOTTOM | Gravity.END;
+        fabParams.setMargins(0, 0, margin, bottomMargin);
+        peachFab.setLayoutParams(fabParams);
+        peachFab.setPadding((int)(6 * density), (int)(6 * density), (int)(6 * density), (int)(6 * density));
+        peachFab.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        peachFab.setContentDescription("Spicetify Mobile");
+        
+        peachFab.setOnClickListener(v -> {
+            webView.evaluateJavascript("if (window.toggleSpotiFiakPanel) window.toggleSpotiFiakPanel();", null);
+        });
+
+        rootLayout.addView(peachFab);
+
         setContentView(rootLayout);
 
         // Setup media session for lock screen controls
@@ -88,6 +115,18 @@ public class MainActivity extends Activity {
 
         // Create notification channel for Android 8+
         createNotificationChannel();
+
+        // Start background playback service
+        try {
+            Intent serviceIntent = new Intent(this, PlaybackService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("SpotiFiak", "Error starting playback service", e);
+        }
 
         // Load Spotify
         webView.loadUrl(SPOTIFY_URL);
@@ -114,8 +153,10 @@ public class MainActivity extends Activity {
 
         // Cache & performance
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
+        // Important: Use device-pixel width instead of 980px desktop zoom
+        settings.setLoadWithOverviewMode(false);
+        settings.setUseWideViewPort(false);
+        settings.setTextZoom(100);
 
         // Mixed content (HTTP resources in HTTPS page)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -137,6 +178,9 @@ public class MainActivity extends Activity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
+                if (url.contains("open.spotify.com")) {
+                    injectEarlyFixes(view);
+                }
             }
 
             @Override
@@ -169,7 +213,6 @@ public class MainActivity extends Activity {
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(android.webkit.ConsoleMessage msg) {
-                // Forward console messages for debugging
                 android.util.Log.d("SpotiFiak", msg.message());
                 return true;
             }
@@ -180,45 +223,82 @@ public class MainActivity extends Activity {
     }
 
     /**
+     * Inject early viewport meta tag and CSS before full DOM finishes
+     */
+    private void injectEarlyFixes(WebView view) {
+        String initJs = 
+            "(() => {" +
+            "  let m = document.querySelector('meta[name=\"viewport\"]');" +
+            "  if (!m) { m = document.createElement('meta'); m.name = 'viewport'; if (document.head) document.head.appendChild(m); }" +
+            "  if (m) m.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';" +
+            "})();";
+        view.evaluateJavascript(initJs, null);
+    }
+
+    /**
      * Inject SpotiFiak scripts and styles into the Spotify Web Player.
-     * This is the core mechanism — same approach as SpotiDuck.
      */
     private void injectSpotiFiak(WebView view) {
-        // 1. Inject the SpotiFiak API (Spicetify compatibility layer)
+        // 0. Ensure viewport meta tag is set
+        injectEarlyFixes(view);
+
+        // 1. Inject base CSS fixes for mobile
+        String mobileCss = loadAsset("css/mobile-fixes.css");
+        if (mobileCss != null) {
+            String cssInjection = "(() => {" +
+                "let style = document.getElementById('spotifiak-mobile-fixes');" +
+                "if (!style) { style = document.createElement('style'); style.id = 'spotifiak-mobile-fixes'; document.head.appendChild(style); }" +
+                "style.textContent = " + escapeForJS(mobileCss) + ";" +
+            "})();";
+            view.evaluateJavascript(cssInjection, null);
+        }
+
+        // 2. Inject the SpotiFiak API (Spicetify compatibility layer)
         String apiScript = loadAsset("js/spotifiak-api.js");
         if (apiScript != null) {
             view.evaluateJavascript(apiScript, null);
         }
 
-        // 2. Inject the SpotiFiak overlay UI (marketplace, addon manager)
+        // 3. Inject the SpotiFiak overlay UI (marketplace, addon manager)
         String overlayScript = loadAsset("js/spotifiak-overlay.js");
         if (overlayScript != null) {
             view.evaluateJavascript(overlayScript, null);
         }
 
-        // 3. Inject base CSS fixes for mobile
-        String mobileCss = loadAsset("css/mobile-fixes.css");
-        if (mobileCss != null) {
-            String cssInjection = "(() => {" +
-                "const style = document.createElement('style');" +
-                "style.id = 'spotifiak-mobile-fixes';" +
-                "style.textContent = " + escapeForJS(mobileCss) + ";" +
-                "document.head.appendChild(style);" +
-            "})();";
-            view.evaluateJavascript(cssInjection, null);
-        }
-
-        // 4. Inject the addon loader (loads installed addons from storage)
+        // 4. Inject the addon loader
         String loaderScript = loadAsset("js/addon-loader.js");
         if (loaderScript != null) {
             view.evaluateJavascript(loaderScript, null);
         }
 
-        // 5. Inject the playback monitor for lock screen/notification controls
+        // 5. Inject the playback monitor for lock screen controls
         String playbackMonitor = loadAsset("js/playback-monitor.js");
         if (playbackMonitor != null) {
             view.evaluateJavascript(playbackMonitor, null);
         }
+
+        // 6. SPA Route change observer
+        String spaObserver = 
+            "(() => {" +
+            "  if (window._sfSpaObserver) return;" +
+            "  window._sfSpaObserver = true;" +
+            "  const notifyNav = () => {" +
+            "    setTimeout(() => {" +
+            "      if (window.SpotiFiak) {" +
+            "        let s = document.getElementById('spotifiak-mobile-fixes');" +
+            "        if (!s && document.head) { " +
+            "          let n = document.createElement('style'); n.id = 'spotifiak-mobile-fixes';" +
+            "          n.textContent = " + (mobileCss != null ? escapeForJS(mobileCss) : "''") + ";" +
+            "          document.head.appendChild(n);" +
+            "        }" +
+            "      }" +
+            "    }, 300);" +
+            "  };" +
+            "  window.addEventListener('popstate', notifyNav);" +
+            "  const origPush = history.pushState;" +
+            "  history.pushState = function() { origPush.apply(this, arguments); notifyNav(); };" +
+            "})();";
+        view.evaluateJavascript(spaObserver, null);
     }
 
     /**

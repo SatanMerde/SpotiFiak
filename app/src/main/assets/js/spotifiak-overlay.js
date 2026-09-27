@@ -1,461 +1,503 @@
 /**
- * SpotiFiak Overlay — Floating UI injected on top of Spotify Web Player
- * Provides the Marketplace button, addon panel, and settings
- * Injected directly into Spotify's DOM
+ * SpotiFiak Overlay — Spicetify Mobile Center injected into Spotify Web Player
+ * Includes the Peach Floating Action Button (🍑), Bottom Navigation Bar,
+ * Marketplace UI, Live Theme Switcher, and Extensions.
  */
 (function() {
   'use strict';
 
-  if (document.getElementById('spotifiak-fab')) return;
-
-  const SF = window.SpotiFiak;
-  if (!SF) return;
-
-  // ── Registry URL (served by the companion server, or bundled) ──
-  const REGISTRY_URL = 'https://raw.githubusercontent.com/SatanMerde/SpotiFiak/main/addons/registry.json';
-  let addonRegistry = [];
-  let installedAddons = SF.getStorage('installed_addons', {});
-
-  // ── Floating Action Button ──
-  const fab = document.createElement('button');
-  fab.id = 'spotifiak-fab';
-  fab.innerHTML = `
-    <svg viewBox="0 0 100 100" width="28" height="28">
-      <defs><linearGradient id="sfg" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#1db954"/><stop offset="100%" style="stop-color:#1ed760"/>
-      </linearGradient></defs>
-      <circle cx="50" cy="50" r="45" fill="url(#sfg)"/>
-      <path d="M35 38C35 38 55 30 70 38" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M37 48C37 48 54 42 66 48" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
-      <path d="M39 57C39 57 52 52 62 57" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-    </svg>
-  `;
-  fab.style.cssText = `
-    position: fixed; bottom: 90px; right: 16px; z-index: 99999;
-    width: 56px; height: 56px; border-radius: 50%;
-    background: rgba(18,18,18,0.9); backdrop-filter: blur(10px);
-    border: 2px solid rgba(29,185,84,0.4);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    transition: all 0.3s ease; padding: 0;
-  `;
-  fab.addEventListener('click', togglePanel);
-  document.body.appendChild(fab);
-
-  // Make FAB draggable
-  let isDragging = false, startY = 0, startBottom = 90;
-  fab.addEventListener('touchstart', (e) => {
-    isDragging = false;
-    startY = e.touches[0].clientY;
-    startBottom = parseInt(fab.style.bottom) || 90;
-  }, { passive: true });
-  fab.addEventListener('touchmove', (e) => {
-    const dy = startY - e.touches[0].clientY;
-    if (Math.abs(dy) > 5) isDragging = true;
-    const newBottom = Math.max(20, Math.min(window.innerHeight - 80, startBottom + dy));
-    fab.style.bottom = newBottom + 'px';
-  }, { passive: true });
-  fab.addEventListener('touchend', (e) => {
-    if (isDragging) e.preventDefault();
-  });
-
-  // ── Panel ──
-  const panel = document.createElement('div');
-  panel.id = 'spotifiak-panel';
-  panel.style.cssText = `
-    position: fixed; bottom: 0; left: 0; right: 0; top: 100%;
-    background: rgba(10,10,10,0.97); backdrop-filter: blur(25px);
-    z-index: 99998; transition: top 0.35s cubic-bezier(0.4,0,0.2,1);
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    color: white;
-  `;
-  document.body.appendChild(panel);
-
-  let panelOpen = false;
-
-  function togglePanel() {
-    if (isDragging) return;
-    panelOpen = !panelOpen;
-    panel.style.top = panelOpen ? '0' : '100%';
-    fab.style.transform = panelOpen ? 'rotate(45deg)' : 'rotate(0)';
-    fab.style.borderColor = panelOpen ? 'rgba(239,68,68,0.6)' : 'rgba(29,185,84,0.4)';
-
-    if (panelOpen && addonRegistry.length === 0) {
-      loadRegistry();
+  function initSpotiFiak() {
+    if (document.getElementById('spotifiak-fab')) return;
+    if (!document.body) {
+      setTimeout(initSpotiFiak, 200);
+      return;
     }
-    if (panelOpen) renderPanel();
-  }
 
-  // ── Load Addon Registry ──
-  async function loadRegistry() {
-    try {
-      const res = await fetch(REGISTRY_URL);
-      const data = await res.json();
-      addonRegistry = data.addons || [];
-      renderPanel();
-    } catch (e) {
-      // Fallback: use bundled registry
-      addonRegistry = getBundledRegistry();
-      renderPanel();
-    }
-  }
-
-  function getBundledRegistry() {
-    return [
-      { id:'theme-midnight-wave', name:'Midnight Wave', description:'Thème sombre avec accents bleu néon', type:'theme', author:'SpotiFiak Team', version:'1.0.0', tags:['dark','neon'], downloads:12450, rating:4.8, spicetify_compatible:false },
-      { id:'theme-aurora-borealis', name:'Aurora Borealis', description:'Dégradés verts et violets dynamiques', type:'theme', author:'NightCoder', version:'2.1.0', tags:['gradient','dynamic'], downloads:8930, rating:4.6, spicetify_compatible:false },
-      { id:'theme-retro-synthwave', name:'Retro Synthwave', description:'Esthétique rétro-futuriste 80s néon', type:'theme', author:'VaporDev', version:'1.3.0', tags:['retro','80s','neon'], downloads:15200, rating:4.9, spicetify_compatible:false },
-      { id:'ext-lyrics-plus', name:'Lyrics+', description:'Paroles synchronisées en temps réel', type:'extension', author:'LyricsMaster', version:'3.0.0', tags:['lyrics','karaoke'], downloads:25600, rating:4.7, spicetify_compatible:true },
-      { id:'ext-visualizer', name:'Audio Visualizer', description:'Visualiseur audio avec barres de fréquence', type:'extension', author:'WaveForm', version:'2.0.0', tags:['visualizer','audio'], downloads:18300, rating:4.5, spicetify_compatible:true },
-      { id:'ext-skip-ads', name:'Ad Skipper', description:'Détecte et skip les publicités', type:'extension', author:'FreeFlow', version:'4.2.1', tags:['ads','skip'], downloads:42000, rating:4.9, spicetify_compatible:true },
-      { id:'ext-sleep-timer', name:'Sleep Timer', description:'Minuteur de sommeil avec fondu du volume', type:'extension', author:'DreamDev', version:'1.5.0', tags:['sleep','timer'], downloads:9800, rating:4.4, spicetify_compatible:false },
-      { id:'app-stats-dashboard', name:'Stats Dashboard', description:'Tableau de bord statistiques d\'écoute', type:'app', author:'DataViz', version:'1.0.0', tags:['stats','analytics'], downloads:7200, rating:4.3, spicetify_compatible:true },
-      { id:'app-queue-manager', name:'Queue Manager+', description:'Gestion avancée de la file d\'attente', type:'app', author:'QueueDev', version:'2.0.0', tags:['queue','management'], downloads:5400, rating:4.2, spicetify_compatible:true },
-      { id:'ext-equalizer', name:'Equalizer Pro', description:'Égaliseur audio 10 bandes', type:'extension', author:'AudioTech', version:'1.8.0', tags:['equalizer','audio'], downloads:11200, rating:4.6, spicetify_compatible:false }
-    ];
-  }
-
-  // ── Render Panel ──
-  function renderPanel() {
-    const typeIcons = { theme:'🎨', extension:'🧩', app:'📱' };
-    const typeColors = { theme:'#a855f7', extension:'#3b82f6', app:'#ec4899' };
-    const installedCount = Object.keys(installedAddons).length;
-
-    panel.innerHTML = `
-      <div style="padding: 16px 16px 0; padding-top: max(16px, env(safe-area-inset-top));">
-        <!-- Header -->
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-          <div>
-            <h1 style="margin:0; font-size:1.5rem; font-weight:800;
-              background:linear-gradient(135deg,#1db954,#1ed760);
-              -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
-              SpotiFiak
-            </h1>
-            <p style="margin:4px 0 0; font-size:0.78rem; color:#6a6a6a;">Spicetify for Mobile • v1.0</p>
-          </div>
-          <button onclick="document.getElementById('spotifiak-fab').click()" 
-            style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#b3b3b3;font-size:1.2rem;cursor:pointer;">
-            ✕
-          </button>
-        </div>
-
-        <!-- Tabs -->
-        <div id="sf-tabs" style="display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none;">
-          <button class="sf-tab sf-tab-active" data-tab="marketplace" style="${tabStyle(true)}">🏪 Marketplace</button>
-          <button class="sf-tab" data-tab="installed" style="${tabStyle(false)}">✅ Installés (${installedCount})</button>
-          <button class="sf-tab" data-tab="spicetify" style="${tabStyle(false)}">🔗 Spicetify</button>
-          <button class="sf-tab" data-tab="settings" style="${tabStyle(false)}">⚙️ Réglages</button>
-        </div>
-      </div>
-
-      <!-- Tab Content -->
-      <div id="sf-tab-content" style="padding: 0 16px 100px;">
-        ${renderMarketplace()}
-      </div>
-    `;
-
-    // Bind tab clicks
-    panel.querySelectorAll('.sf-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        panel.querySelectorAll('.sf-tab').forEach(t => {
-          t.style.background = 'rgba(255,255,255,0.05)';
-          t.style.color = '#b3b3b3';
-          t.style.borderColor = 'transparent';
-          t.classList.remove('sf-tab-active');
-        });
-        tab.style.background = 'rgba(29,185,84,0.1)';
-        tab.style.color = '#1db954';
-        tab.style.borderColor = 'rgba(29,185,84,0.3)';
-        tab.classList.add('sf-tab-active');
-
-        const content = panel.querySelector('#sf-tab-content');
-        switch(tab.dataset.tab) {
-          case 'marketplace': content.innerHTML = renderMarketplace(); break;
-          case 'installed': content.innerHTML = renderInstalled(); break;
-          case 'spicetify': content.innerHTML = renderSpicetify(); break;
-          case 'settings': content.innerHTML = renderSettings(); break;
+    // Ensure SpotiFiak API is present or initialize fallback
+    window.SpotiFiak = window.SpotiFiak || {
+      version: '1.1.0',
+      platform: 'android',
+      injectedStyles: new Map(),
+      getStorage(k, def) {
+        try { const v = localStorage.getItem('sf_' + k); return v ? JSON.parse(v) : def; } catch(e) { return def; }
+      },
+      setStorage(k, val) {
+        try { localStorage.setItem('sf_' + k, JSON.stringify(val)); } catch(e) {}
+      },
+      injectCSS(id, css) {
+        let el = document.getElementById('sf-style-' + id);
+        if (!el) {
+          el = document.createElement('style');
+          el.id = 'sf-style-' + id;
+          document.head.appendChild(el);
         }
-        bindActions();
-      });
-    });
-
-    bindActions();
-  }
-
-  function tabStyle(active) {
-    return `padding:8px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;white-space:nowrap;border:1px solid ${active ? 'rgba(29,185,84,0.3)' : 'transparent'};cursor:pointer;background:${active ? 'rgba(29,185,84,0.1)' : 'rgba(255,255,255,0.05)'};color:${active ? '#1db954' : '#b3b3b3'};font-family:inherit;`;
-  }
-
-  // ── Marketplace Tab ──
-  function renderMarketplace() {
-    let html = `
-      <div style="position:relative;margin-bottom:14px;">
-        <input id="sf-search" type="text" placeholder="Rechercher des addons..." 
-          style="width:100%;padding:12px 16px 12px 40px;background:rgba(255,255,255,0.06);
-            border:1px solid rgba(255,255,255,0.08);border-radius:25px;color:white;
-            font-size:0.88rem;outline:none;font-family:inherit;">
-        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#6a6a6a;">🔍</span>
-      </div>
-      <div id="sf-filters" style="display:flex;gap:6px;margin-bottom:16px;">
-        <button class="sf-filter sf-filter-active" data-type="all" style="${filterStyle(true)}">🌟 Tous</button>
-        <button class="sf-filter" data-type="theme" style="${filterStyle(false)}">🎨 Thèmes</button>
-        <button class="sf-filter" data-type="extension" style="${filterStyle(false)}">🧩 Extensions</button>
-        <button class="sf-filter" data-type="app" style="${filterStyle(false)}">📱 Apps</button>
-      </div>
-    `;
-    html += renderAddonCards(addonRegistry);
-    return html;
-  }
-
-  function filterStyle(active) {
-    return `padding:6px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;background:${active ? 'rgba(29,185,84,0.15)' : 'rgba(255,255,255,0.05)'};color:${active ? '#1db954' : '#888'};`;
-  }
-
-  function renderAddonCards(addons) {
-    if (addons.length === 0) {
-      return '<p style="text-align:center;color:#6a6a6a;padding:40px 0;">Aucun addon trouvé</p>';
-    }
-    const typeIcons = { theme:'🎨', extension:'🧩', app:'📱' };
-    const typeColors = { theme:'rgba(168,85,247,0.15)', extension:'rgba(59,130,246,0.15)', app:'rgba(236,72,153,0.15)' };
-    const typeTextColors = { theme:'#a855f7', extension:'#3b82f6', app:'#ec4899' };
-    
-    return addons.map(a => {
-      const installed = !!installedAddons[a.id];
-      return `
-        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;margin-bottom:10px;transition:all 0.2s;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;padding:3px 8px;border-radius:20px;background:${typeColors[a.type] || typeColors.extension};color:${typeTextColors[a.type] || typeTextColors.extension};">
-              ${typeIcons[a.type] || '📦'} ${a.type}
-            </span>
-            ${a.spicetify_compatible ? '<span style="font-size:0.6rem;font-weight:700;background:rgba(99,102,241,0.15);color:#6366f1;padding:2px 6px;border-radius:20px;">🔗 Spicetify</span>' : ''}
-          </div>
-          <h3 style="margin:0 0 4px;font-size:1rem;font-weight:700;">${a.name}</h3>
-          <p style="margin:0;font-size:0.8rem;color:#b3b3b3;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-            ${a.description}
-          </p>
-          <div style="display:flex;align-items:center;gap:12px;margin-top:10px;font-size:0.73rem;color:#6a6a6a;">
-            <span style="font-weight:600;color:#b3b3b3;">@${a.author}</span>
-            <span>★ ${a.rating}</span>
-            <span>↓ ${formatNum(a.downloads)}</span>
-          </div>
-          <button data-action="${installed ? 'uninstall' : 'install'}" data-addon-id="${a.id}"
-            style="width:100%;margin-top:10px;padding:10px;border-radius:8px;font-size:0.84rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all 0.2s;
-              ${installed 
-                ? 'background:rgba(255,255,255,0.06);color:#1db954;border:1px solid rgba(29,185,84,0.3);' 
-                : 'background:#1db954;color:#000;'}">
-            ${installed ? '✓ Installé' : '+ Installer'}
-          </button>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // ── Installed Tab ──
-  function renderInstalled() {
-    const keys = Object.keys(installedAddons);
-    if (keys.length === 0) {
-      return `
-        <div style="text-align:center;padding:60px 20px;">
-          <div style="font-size:3rem;opacity:0.2;">📦</div>
-          <h3 style="margin:12px 0 6px;font-weight:700;">Aucun addon installé</h3>
-          <p style="color:#6a6a6a;font-size:0.85rem;">Explorez le Marketplace pour commencer !</p>
-        </div>
-      `;
-    }
-
-    const typeIcons = { theme:'🎨', extension:'🧩', app:'📱' };
-
-    return keys.map(id => {
-      const a = installedAddons[id];
-      return `
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;margin-bottom:8px;">
-          <div style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:rgba(29,185,84,0.1);flex-shrink:0;">
-            ${typeIcons[a.type] || '📦'}
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;font-size:0.92rem;">${a.name}</div>
-            <div style="font-size:0.73rem;color:#6a6a6a;">v${a.version} • @${a.author}</div>
-          </div>
-          <button data-action="uninstall" data-addon-id="${id}"
-            style="padding:8px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;border:none;background:rgba(239,68,68,0.1);color:#ef4444;font-family:inherit;">
-            🗑️
-          </button>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // ── Spicetify Tab ──
-  function renderSpicetify() {
-    return `
-      <div style="background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(99,102,241,0.03));border:1px solid rgba(99,102,241,0.2);border-radius:14px;padding:16px;margin-bottom:16px;">
-        <div style="display:flex;gap:12px;">
-          <span style="font-size:1.5rem;">🔗</span>
-          <div>
-            <h3 style="margin:0 0 6px;font-size:0.95rem;font-weight:700;">Compatibilité Spicetify</h3>
-            <p style="margin:0;font-size:0.82rem;color:#b3b3b3;line-height:1.5;">
-              SpotiFiak émule l'API <code style="background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;font-size:0.8em;">Spicetify</code> 
-              pour que les extensions PC fonctionnent sur mobile.
-            </p>
-          </div>
-        </div>
-      </div>
-      <h3 style="font-size:0.85rem;font-weight:700;color:#6a6a6a;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">APIs Supportées</h3>
-      ${[
-        ['Spicetify.Player', '✅', 'Play, pause, skip, volume'],
-        ['Spicetify.CosmosAsync', '✅', 'GET, POST, PUT, DELETE'],
-        ['Spicetify.LocalStorage', '✅', 'Natif localStorage'],
-        ['Spicetify.PopupModal', '✅', 'Émulé via notifications'],
-        ['Spicetify.ContextMenu', '✅', 'Items enregistrés'],
-        ['Spicetify.Platform', '⚡', 'Partiel (History)'],
-        ['Spicetify.URI', '✅', 'Parse track/playlist/album']
-      ].map(([api, status, desc]) => `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:4px;">
-          <span>${status}</span>
-          <code style="font-size:0.8rem;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;color:#a78bfa;">${api}</code>
-          <span style="font-size:0.75rem;color:#6a6a6a;margin-left:auto;">${desc}</span>
-        </div>
-      `).join('')}
-      <p style="margin-top:20px;font-size:0.78rem;color:#6a6a6a;text-align:center;">
-        Les extensions Spicetify marquées 🔗 dans le Marketplace sont compatibles.
-      </p>
-    `;
-  }
-
-  // ── Settings Tab ──
-  function renderSettings() {
-    return `
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:14px;overflow:hidden;">
-        <div style="padding:12px 14px 6px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6a6a6a;">
-          Lecteur
-        </div>
-        ${settingItem('Mode Desktop', 'Forcer le mode bureau dans Spotify', true)}
-        ${settingItem('Auto-injection', 'Injecter les addons au chargement', true)}
-        ${settingItem('Compatibilité Spicetify', 'Charger la couche API Spicetify', true)}
-      </div>
-      
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:14px;overflow:hidden;margin-top:16px;">
-        <div style="padding:12px 14px 6px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6a6a6a;">
-          Données
-        </div>
-        <div style="padding:14px;border-top:1px solid rgba(255,255,255,0.06);cursor:pointer;" id="sf-clear-data">
-          <span style="font-weight:600;font-size:0.9rem;color:#ef4444;">🗑️ Réinitialiser les données</span>
-          <p style="font-size:0.75rem;color:#6a6a6a;margin:2px 0 0;">Supprimer tous les addons installés</p>
-        </div>
-      </div>
-
-      <div style="text-align:center;padding:30px 0;font-size:0.78rem;color:#6a6a6a;">
-        <p style="margin:0;">SpotiFiak v1.0.0</p>
-        <p style="margin:4px 0;">Créé par <span style="color:#1db954;">SatanMerde</span></p>
-        <p style="margin:8px 0 0;font-size:0.7rem;opacity:0.6;">Non affilié à Spotify AB. Inspiré de SpotiDuck.</p>
-      </div>
-    `;
-  }
-
-  function settingItem(label, desc, checked) {
-    return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;border-top:1px solid rgba(255,255,255,0.06);">
-        <div>
-          <div style="font-weight:600;font-size:0.88rem;">${label}</div>
-          <div style="font-size:0.75rem;color:#6a6a6a;margin-top:1px;">${desc}</div>
-        </div>
-        <div style="width:44px;height:24px;border-radius:12px;background:${checked ? '#1db954' : 'rgba(255,255,255,0.1)'};position:relative;cursor:pointer;">
-          <div style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:3px;${checked ? 'right:3px' : 'left:3px'};transition:all 0.2s;"></div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ── Actions ──
-  function bindActions() {
-    // Search
-    const search = panel.querySelector('#sf-search');
-    if (search) {
-      search.addEventListener('input', () => {
-        const q = search.value.toLowerCase();
-        const filtered = addonRegistry.filter(a =>
-          a.name.toLowerCase().includes(q) || a.description.toLowerCase().includes(q) ||
-          a.author.toLowerCase().includes(q) || (a.tags && a.tags.some(t => t.includes(q)))
-        );
-        const grid = panel.querySelector('#sf-filters')?.nextElementSibling;
-        if (grid) grid.outerHTML = renderAddonCards(filtered);
-        bindActions();
-      });
-    }
-
-    // Filters
-    panel.querySelectorAll('.sf-filter').forEach(f => {
-      f.addEventListener('click', () => {
-        panel.querySelectorAll('.sf-filter').forEach(ff => {
-          ff.style.background = 'rgba(255,255,255,0.05)';
-          ff.style.color = '#888';
-        });
-        f.style.background = 'rgba(29,185,84,0.15)';
-        f.style.color = '#1db954';
-
-        const type = f.dataset.type;
-        const filtered = type === 'all' ? addonRegistry : addonRegistry.filter(a => a.type === type);
-        
-        // Replace the addon cards
-        const container = panel.querySelector('#sf-tab-content');
-        const searchHTML = container.querySelector('#sf-search')?.parentElement.outerHTML || '';
-        const filterHTML = container.querySelector('#sf-filters')?.outerHTML || '';
-        container.innerHTML = searchHTML + filterHTML + renderAddonCards(filtered);
-        bindActions();
-      });
-    });
-
-    // Install/Uninstall buttons
-    panel.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.addonId;
-        const action = btn.dataset.action;
-
-        if (action === 'install') {
-          const addon = addonRegistry.find(a => a.id === id);
-          if (addon) {
-            installedAddons[id] = { ...addon, installedAt: Date.now(), enabled: true };
-            SF.setStorage('installed_addons', installedAddons);
-            SF.showNotification('Installé !', addon.name + ' activé', 'success');
-            renderPanel();
-          }
-        } else if (action === 'uninstall') {
-          const addon = installedAddons[id];
-          if (addon) {
-            SF.removeCSS(id);
-            SF.disableExtension(id);
-            delete installedAddons[id];
-            SF.setStorage('installed_addons', installedAddons);
-            SF.showNotification('Désinstallé', addon.name + ' supprimé', 'warning');
-            renderPanel();
-          }
+        el.textContent = css;
+        this.injectedStyles.set(id, css);
+      },
+      removeCSS(id) {
+        const el = document.getElementById('sf-style-' + id);
+        if (el) el.remove();
+        this.injectedStyles.delete(id);
+      },
+      showNotification(title, msg) {
+        if (window.SpotiFiakNative && window.SpotiFiakNative.showToast) {
+          window.SpotiFiakNative.showToast(title + ': ' + msg);
         }
-      });
+      }
+    };
+
+    const SF = window.SpotiFiak;
+    let installedAddons = SF.getStorage('installed_addons', {
+      'theme-peach-sunset': { enabled: true, date: Date.now() }
     });
 
-    // Clear data
-    const clearBtn = panel.querySelector('#sf-clear-data');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        Object.keys(installedAddons).forEach(id => {
-          SF.removeCSS(id);
-          SF.disableExtension(id);
+    // ── 1. Floating Action Button with Peach Logo (🍑) ──
+    const fab = document.createElement('button');
+    fab.id = 'spotifiak-fab';
+    fab.title = 'Ouvrir Spicetify Mobile';
+    fab.innerHTML = `
+      <div style="position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
+        <svg viewBox="0 0 108 108" width="36" height="36" style="filter: drop-shadow(0 2px 8px rgba(255,110,110,0.6));">
+          <!-- Leaf -->
+          <path d="M54,34 C58,22 72,18 78,22 C78,28 72,36 58,38 Z" fill="#1DB954"/>
+          <!-- Peach Lobe Left -->
+          <path d="M54,36 C42,36 26,44 26,60 C26,76 42,88 54,88 C54,72 54,54 54,36 Z" fill="#FF6E6E"/>
+          <!-- Peach Lobe Right -->
+          <path d="M54,36 C66,36 82,44 82,60 C82,76 66,88 54,88 C54,72 54,54 54,36 Z" fill="#FFA07A"/>
+          <!-- Cleft -->
+          <path d="M54,36 C55,48 55,62 54,78" stroke="#E0485A" stroke-width="2" stroke-linecap="round"/>
+          <!-- Sound waves -->
+          <path d="M35,58 C42,54 50,54 58,58 C64,61 68,60 72,57" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M38,66 C44,63 50,63 56,66 C61,68 65,68 69,65" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+    `;
+    fab.style.cssText = `
+      position: fixed; bottom: 72px; right: 16px; z-index: 99999;
+      width: 54px; height: 54px; border-radius: 50%;
+      background: rgba(14, 15, 23, 0.94); backdrop-filter: blur(14px);
+      border: 2px solid rgba(255, 110, 110, 0.5);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 110, 110, 0.3);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); padding: 0; outline: none;
+    `;
+    fab.addEventListener('click', togglePanel);
+    document.body.appendChild(fab);
+
+    // Draggable FAB
+    let isDragging = false, startY = 0, startBottom = 72;
+    fab.addEventListener('touchstart', (e) => {
+      isDragging = false;
+      startY = e.touches[0].clientY;
+      startBottom = parseInt(fab.style.bottom) || 72;
+    }, { passive: true });
+    fab.addEventListener('touchmove', (e) => {
+      const dy = startY - e.touches[0].clientY;
+      if (Math.abs(dy) > 6) isDragging = true;
+      const newBottom = Math.max(65, Math.min(window.innerHeight - 80, startBottom + dy));
+      fab.style.bottom = newBottom + 'px';
+    }, { passive: true });
+    fab.addEventListener('touchend', (e) => {
+      if (isDragging) e.preventDefault();
+    });
+
+    // ── 2. Mobile Bottom Navigation Bar ──
+    injectBottomNav();
+
+    // ── 3. Spicetify Mobile Panel Bottom Sheet ──
+    const panel = document.createElement('div');
+    panel.id = 'spotifiak-panel';
+    panel.style.cssText = `
+      position: fixed; bottom: 0; left: 0; right: 0; top: 100%;
+      background: rgba(10, 11, 16, 0.98); backdrop-filter: blur(28px);
+      z-index: 99998; transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: white; border-top: 1px solid rgba(255, 110, 110, 0.25);
+    `;
+    document.body.appendChild(panel);
+
+    let panelOpen = false;
+    let addonRegistry = getBundledRegistry();
+
+    function togglePanel() {
+      if (isDragging) return;
+      panelOpen = !panelOpen;
+      panel.style.top = panelOpen ? '0' : '100%';
+      fab.style.transform = panelOpen ? 'rotate(90deg)' : 'rotate(0)';
+      fab.style.borderColor = panelOpen ? 'rgba(255, 110, 110, 0.9)' : 'rgba(255, 110, 110, 0.5)';
+      if (panelOpen) renderPanel();
+    }
+
+    // Expose toggle to global for native Android button call
+    window.toggleSpotiFiakPanel = togglePanel;
+
+    function getBundledRegistry() {
+      return [
+        { id:'theme-peach-sunset', name:'Peach Sunset 🍑', description:'Thème officiel SpotiFiak aux accents pêche et corail lumineux.', type:'theme', author:'SpotiFiak Team', version:'1.0.0', tags:['peach','coral','glow'], downloads:48200, rating:5.0 },
+        { id:'theme-midnight-wave', name:'Midnight Wave', description:'Thème sombre et élégant avec néons bleu nuit.', type:'theme', author:'SpotiFiak Team', version:'1.0.0', tags:['dark','neon'], downloads:12450, rating:4.8 },
+        { id:'theme-aurora-borealis', name:'Aurora Borealis', description:'Dégradés dynamiques aurore verte et violette.', type:'theme', author:'NightCoder', version:'2.1.0', tags:['gradient','nature'], downloads:8930, rating:4.6 },
+        { id:'theme-retro-synthwave', name:'Retro Synthwave', description:'Esthétique rétro-futuriste 80s néon magenta & cyan.', type:'theme', author:'VaporDev', version:'1.3.0', tags:['retro','80s'], downloads:15200, rating:4.9 },
+        { id:'theme-amoled-black', name:'AMOLED Pure Black', description:'Noir 100% pur pour écran OLED et économie d\'énergie.', type:'theme', author:'OledDev', version:'1.0.0', tags:['amoled','minimal'], downloads:29100, rating:4.9 },
+        { id:'ext-lyrics-plus', name:'Lyrics+', description:'Affichage des paroles synchronisées en temps réel.', type:'extension', author:'LyricsMaster', version:'3.0.0', tags:['lyrics','karaoke'], downloads:25600, rating:4.7 },
+        { id:'ext-visualizer', name:'Audio Visualizer', description:'Spectre visuel animé sur la barre de lecture.', type:'extension', author:'WaveForm', version:'2.0.0', tags:['visualizer','audio'], downloads:18300, rating:4.5 },
+        { id:'ext-sleep-timer', name:'Sleep Timer', description:'Minuteur de sommeil avec fondu doux du volume.', type:'extension', author:'DreamDev', version:'1.5.0', tags:['sleep','timer'], downloads:9800, rating:4.4 },
+        { id:'ext-equalizer', name:'Equalizer Pro', description:'Égaliseur graphique avec presets audio optimisés.', type:'extension', author:'AudioTech', version:'1.8.0', tags:['equalizer','audio'], downloads:11200, rating:4.6 }
+      ];
+    }
+
+    function renderPanel() {
+      const installedCount = Object.keys(installedAddons).length;
+      panel.innerHTML = `
+        <div style="padding: 18px 16px 0; padding-top: max(18px, env(safe-area-inset-top));">
+          <!-- Header with Peach Branding -->
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #ff6e6e, #ffa07a); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(255,110,110,0.4);">
+                <span style="font-size:24px;">🍑</span>
+              </div>
+              <div>
+                <h1 style="margin:0; font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#ff6e6e,#ffa07a); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+                  SpotiFiak
+                </h1>
+                <p style="margin:2px 0 0; font-size:0.75rem; color:#a0a0b0;">Spicetify Mobile • Personnalisation Spotify</p>
+              </div>
+            </div>
+            <button id="sf-close-btn" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.08); border:none; color:#ffffff; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              ✕
+            </button>
+          </div>
+
+          <!-- Navigation Tabs -->
+          <div id="sf-tabs" style="display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none;">
+            <button class="sf-tab sf-tab-active" data-tab="themes" style="${tabStyle(true)}">🎨 Thèmes</button>
+            <button class="sf-tab" data-tab="extensions" style="${tabStyle(false)}">🧩 Extensions</button>
+            <button class="sf-tab" data-tab="custom-css" style="${tabStyle(false)}">✏️ CSS Perso</button>
+            <button class="sf-tab" data-tab="settings" style="${tabStyle(false)}">⚙️ Réglages</button>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="sf-tab-content" style="padding: 0 16px 120px;">
+          ${renderThemes()}
+        </div>
+      `;
+
+      document.getElementById('sf-close-btn').addEventListener('click', togglePanel);
+
+      panel.querySelectorAll('.sf-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          panel.querySelectorAll('.sf-tab').forEach(t => {
+            t.style.background = 'rgba(255,255,255,0.06)';
+            t.style.color = '#a0a0b0';
+            t.style.borderColor = 'transparent';
+            t.classList.remove('sf-tab-active');
+          });
+          tab.style.background = 'rgba(255,110,110,0.15)';
+          tab.style.color = '#ff6e6e';
+          tab.style.borderColor = 'rgba(255,110,110,0.4)';
+          tab.classList.add('sf-tab-active');
+
+          const content = panel.querySelector('#sf-tab-content');
+          switch(tab.dataset.tab) {
+            case 'themes': content.innerHTML = renderThemes(); break;
+            case 'extensions': content.innerHTML = renderExtensions(); break;
+            case 'custom-css': content.innerHTML = renderCustomCSS(); break;
+            case 'settings': content.innerHTML = renderSettings(); break;
+          }
+          bindActions();
         });
-        installedAddons = {};
-        SF.setStorage('installed_addons', {});
-        SF.showNotification('Réinitialisé', 'Tous les addons supprimés', 'success');
-        renderPanel();
       });
+
+      bindActions();
+    }
+
+    function tabStyle(active) {
+      return `
+        padding: 8px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+        cursor: pointer; white-space: nowrap; border: 1px solid ${active ? 'rgba(255,110,110,0.4)' : 'transparent'};
+        background: ${active ? 'rgba(255,110,110,0.15)' : 'rgba(255,255,255,0.06)'};
+        color: ${active ? '#ff6e6e' : '#a0a0b0'}; transition: all 0.2s ease;
+      `;
+    }
+
+    function renderThemes() {
+      const themes = addonRegistry.filter(a => a.type === 'theme');
+      const activeTheme = SF.getStorage('active_theme_id', 'theme-peach-sunset');
+
+      return `
+        <div style="margin-bottom:12px; font-size:0.85rem; color:#888;">
+          Sélectionnez un thème pour transformer instantanément l'apparence de Spotify :
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          ${themes.map(t => {
+            const isActive = activeTheme === t.id;
+            return `
+              <div style="background:rgba(25,27,38,0.7); border:1px solid ${isActive ? '#ff6e6e' : 'rgba(255,255,255,0.08)'}; border-radius:14px; padding:14px; display:flex; align-items:center; justify-content:space-between; box-shadow:${isActive ? '0 0 16px rgba(255,110,110,0.2)' : 'none'};">
+                <div style="max-width:70%;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-weight:700; font-size:0.95rem; color:white;">${t.name}</span>
+                    ${isActive ? '<span style="background:#ff6e6e; color:#0c0d14; font-size:0.65rem; font-weight:800; padding:2px 6px; border-radius:6px;">ACTIF</span>' : ''}
+                  </div>
+                  <div style="font-size:0.75rem; color:#9a9ab0; margin-top:3px;">${t.description}</div>
+                  <div style="font-size:0.68rem; color:#606070; margin-top:4px;">Par ${t.author} • ⭐ ${t.rating}</div>
+                </div>
+                <button class="sf-action-btn" data-action="apply-theme" data-id="${t.id}" style="padding:8px 16px; border-radius:18px; border:none; font-weight:700; font-size:0.8rem; cursor:pointer; background:${isActive ? 'rgba(255,255,255,0.1)' : '#ff6e6e'}; color:${isActive ? '#fff' : '#0c0d14'};">
+                  ${isActive ? 'Réappliquer' : 'Appliquer'}
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderExtensions() {
+      const exts = addonRegistry.filter(a => a.type === 'extension');
+      return `
+        <div style="margin-bottom:12px; font-size:0.85rem; color:#888;">
+          Activez ou désactivez les extensions Spicetify Mobile en un clic :
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          ${exts.map(e => {
+            const isInstalled = !!installedAddons[e.id];
+            return `
+              <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:14px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="max-width:72%;">
+                  <div style="font-weight:700; font-size:0.95rem; color:white;">${e.name}</div>
+                  <div style="font-size:0.75rem; color:#9a9ab0; margin-top:3px;">${e.description}</div>
+                  <div style="font-size:0.68rem; color:#606070; margin-top:4px;">Par ${e.author} • ⭐ ${e.rating}</div>
+                </div>
+                <button class="sf-action-btn" data-action="toggle-ext" data-id="${e.id}" style="padding:8px 14px; border-radius:18px; border:none; font-weight:700; font-size:0.78rem; cursor:pointer; background:${isInstalled ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.1)'}; color:${isInstalled ? '#22c55e' : '#fff'};">
+                  ${isInstalled ? 'Activé ✓' : 'Activer'}
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderCustomCSS() {
+      const currentCSS = SF.getStorage('custom_user_css', '');
+      return `
+        <div style="font-size:0.85rem; color:#888; margin-bottom:10px;">
+          Injectez vos propres règles CSS ou snippets Spicetify :
+        </div>
+        <textarea id="sf-custom-css-input" placeholder="/* Entrez votre CSS Spicetify ici... */\nbody { filter: contrast(105%); }" style="width:100%; height:200px; background:#12131b; border:1px solid rgba(255,110,110,0.3); border-radius:12px; color:#e0e0e0; font-family:monospace; font-size:12px; padding:12px; box-sizing:border-box; outline:none; resize:none;">${currentCSS}</textarea>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button id="sf-save-custom-css" style="flex:1; padding:10px; border-radius:12px; background:#ff6e6e; border:none; color:#0c0d14; font-weight:700; cursor:pointer;">
+            Sauvegarder & Injecter
+          </button>
+          <button id="sf-clear-custom-css" style="padding:10px 16px; border-radius:12px; background:rgba(255,255,255,0.08); border:none; color:#aaa; font-weight:600; cursor:pointer;">
+            Effacer
+          </button>
+        </div>
+      `;
+    }
+
+    function renderSettings() {
+      return `
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
+            <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">Affichage Mobile Optimisé</div>
+            <div style="font-size:0.75rem; color:#888; margin-bottom:12px;">Adapte Spotify Desktop sur écran de téléphone (plein écran, barre de navigation tactile).</div>
+            <button id="sf-toggle-library" style="padding:8px 14px; border-radius:10px; background:rgba(255,110,110,0.2); border:1px solid rgba(255,110,110,0.4); color:#ff6e6e; font-weight:700; font-size:0.8rem; cursor:pointer;">
+              Ouvrir / Fermer le tiroir Bibliothèque
+            </button>
+          </div>
+
+          <div style="background:rgba(25,27,38,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
+            <div style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">À propos de SpotiFiak</div>
+            <div style="font-size:0.78rem; color:#a0a0b0; line-height:1.5;">
+              SpotiFiak v1.1.0 • Client Spicetify Mobile pour Android.<br/>
+              Inspiré de l'architecture WebView et MediaSession, avec gestion complète des thèmes et extensions.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function bindActions() {
+      // Apply Theme buttons
+      panel.querySelectorAll('[data-action="apply-theme"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const themeId = btn.dataset.id;
+          applyTheme(themeId);
+          renderPanel();
+        });
+      });
+
+      // Toggle Extension buttons
+      panel.querySelectorAll('[data-action="toggle-ext"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const extId = btn.dataset.id;
+          toggleExtension(extId);
+          renderPanel();
+        });
+      });
+
+      // Custom CSS
+      const saveCssBtn = document.getElementById('sf-save-custom-css');
+      if (saveCssBtn) {
+        saveCssBtn.addEventListener('click', () => {
+          const css = document.getElementById('sf-custom-css-input').value;
+          SF.setStorage('custom_user_css', css);
+          SF.injectCSS('user-custom', css);
+          SF.showNotification('CSS Appliqué', 'Vos règles personnalisées sont actives !');
+        });
+      }
+
+      const clearCssBtn = document.getElementById('sf-clear-custom-css');
+      if (clearCssBtn) {
+        clearCssBtn.addEventListener('click', () => {
+          document.getElementById('sf-custom-css-input').value = '';
+          SF.setStorage('custom_user_css', '');
+          SF.removeCSS('user-custom');
+          SF.showNotification('CSS Réinitialisé', 'Le style personnalisé a été retiré.');
+        });
+      }
+
+      // Drawer toggle
+      const toggleLibBtn = document.getElementById('sf-toggle-library');
+      if (toggleLibBtn) {
+        toggleLibBtn.addEventListener('click', () => {
+          document.body.classList.toggle('sf-show-library');
+          togglePanel();
+        });
+      }
+    }
+
+    function applyTheme(themeId) {
+      SF.setStorage('active_theme_id', themeId);
+      // Theme CSS files bundled directly in APK assets or injected inline
+      const themeStyles = {
+        'theme-peach-sunset': `
+          :root { --spice-button:#ff6e6e!important; --spice-main:#0c0d14!important; }
+          body, [data-testid="root"], div[data-testid="main-view"] { background: #0c0d14 !important; color: #fff !important; }
+          [data-testid="control-button-playpause"], button[data-testid="play-button"], .main-playButton-PlayButton { background-color: #ff6e6e !important; color:#0c0d14!important; box-shadow:0 4px 18px rgba(255,110,110,0.5)!important; }
+          .playback-progressbar-isInteractive .progress-bar__slider { background-color: #ff6e6e !important; }
+          .main-card-card { border: 1px solid rgba(255,110,110,0.15) !important; background: rgba(22,24,34,0.7) !important; }
+        `,
+        'theme-midnight-wave': `
+          :root { --spice-button:#00d4ff!important; --spice-main:#060814!important; }
+          body, [data-testid="root"], div[data-testid="main-view"] { background: #060814 !important; color: #e0f2fe !important; }
+          [data-testid="control-button-playpause"], button[data-testid="play-button"] { background-color: #00d4ff !important; color:#060814!important; box-shadow:0 4px 18px rgba(0,212,255,0.4)!important; }
+        `,
+        'theme-aurora-borealis': `
+          body, [data-testid="root"], div[data-testid="main-view"] { background: linear-gradient(180deg, #09131c 0%, #0d091a 100%) !important; color: #f0fdf4 !important; }
+          [data-testid="control-button-playpause"], button[data-testid="play-button"] { background-color: #22c55e !important; color:#09131c!important; box-shadow:0 4px 18px rgba(34,197,94,0.4)!important; }
+        `,
+        'theme-retro-synthwave': `
+          body, [data-testid="root"], div[data-testid="main-view"] { background: #120422 !important; color: #ffd6f0 !important; }
+          [data-testid="control-button-playpause"], button[data-testid="play-button"] { background-color: #ff007f !important; color:#fff!important; box-shadow:0 4px 20px rgba(255,0,127,0.5)!important; }
+        `,
+        'theme-amoled-black': `
+          body, [data-testid="root"], div[data-testid="main-view"], .Root__now-playing-bar { background: #000000 !important; color: #ffffff !important; }
+          [data-testid="control-button-playpause"], button[data-testid="play-button"] { background-color: #ffffff !important; color:#000!important; }
+          .main-card-card { background: #070707 !important; border: 1px solid #1c1c1c !important; }
+        `
+      };
+
+      if (themeStyles[themeId]) {
+        SF.injectCSS('active-theme', themeStyles[themeId]);
+      }
+      SF.showNotification('Thème Appliqué', 'Thème activé avec succès !');
+    }
+
+    function toggleExtension(extId) {
+      if (installedAddons[extId]) {
+        delete installedAddons[extId];
+        SF.setStorage('installed_addons', installedAddons);
+        SF.removeCSS('ext-' + extId);
+        SF.showNotification('Extension Désactivée', extId);
+      } else {
+        installedAddons[extId] = { enabled: true, date: Date.now() };
+        SF.setStorage('installed_addons', installedAddons);
+        SF.showNotification('Extension Activée', extId);
+      }
+    }
+
+    function injectBottomNav() {
+      if (document.getElementById('sf-bottom-nav')) return;
+
+      const nav = document.createElement('nav');
+      nav.id = 'sf-bottom-nav';
+      nav.innerHTML = `
+        <button class="sf-nav-item active" id="sf-nav-home">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h5v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6h5V7.577l-7.5-4.33z"/></svg>
+          Accueil
+        </button>
+        <button class="sf-nav-item" id="sf-nav-search">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.533 1.279c-5.18 0-9.407 4.14-9.407 9.279s4.226 9.279 9.407 9.279c2.234 0 4.29-.77 5.907-2.058l4.353 4.353a1 1 0 1 0 1.414-1.414l-4.344-4.344a9.157 9.157 0 0 0 2.077-5.816c0-5.14-4.226-9.28-9.407-9.28zm-7.407 9.279c0-4.006 3.302-7.279 7.407-7.279s7.407 3.273 7.407 7.279-3.302 7.279-7.407 7.279-7.407-3.273-7.407-7.279z"/></svg>
+          Recherche
+        </button>
+        <button class="sf-nav-item" id="sf-nav-library">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1.5-.866l-5 3zM8.5 2.134A1 1 0 0 0 7 3v18a1 1 0 0 0 1.5.866l5-3A1 1 0 0 0 14 18V3a1 1 0 0 0-1.5-.866l-4 2.4z"/></svg>
+          Bibliothèque
+        </button>
+        <button class="sf-nav-item sf-nav-item-peach" id="sf-nav-spicetify">
+          <span style="font-size:20px; line-height:1;">🍑</span>
+          Spicetify
+        </button>
+      `;
+
+      document.body.appendChild(nav);
+
+      document.getElementById('sf-nav-home').addEventListener('click', () => {
+        setActiveNav('sf-nav-home');
+        document.body.classList.remove('sf-show-library');
+        const homeBtn = document.querySelector('a[href="/"]') || document.querySelector('[data-testid="home-button"]');
+        if (homeBtn) homeBtn.click();
+        else window.location.href = 'https://open.spotify.com/';
+      });
+
+      document.getElementById('sf-nav-search').addEventListener('click', () => {
+        setActiveNav('sf-nav-search');
+        document.body.classList.remove('sf-show-library');
+        const searchBtn = document.querySelector('a[href="/search"]') || document.querySelector('[data-testid="search-button"]');
+        if (searchBtn) searchBtn.click();
+        else window.location.href = 'https://open.spotify.com/search';
+      });
+
+      document.getElementById('sf-nav-library').addEventListener('click', () => {
+        setActiveNav('sf-nav-library');
+        document.body.classList.toggle('sf-show-library');
+      });
+
+      document.getElementById('sf-nav-spicetify').addEventListener('click', () => {
+        togglePanel();
+      });
+    }
+
+    function setActiveNav(id) {
+      document.querySelectorAll('.sf-nav-item').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById(id);
+      if (target) target.classList.add('active');
+    }
+
+    // Apply saved theme on start
+    const savedTheme = SF.getStorage('active_theme_id', 'theme-peach-sunset');
+    applyTheme(savedTheme);
+
+    // Apply saved custom CSS on start
+    const savedCustomCss = SF.getStorage('custom_user_css', '');
+    if (savedCustomCss) {
+      SF.injectCSS('user-custom', savedCustomCss);
     }
   }
 
-  function formatNum(n) {
-    if (!n) return '0';
-    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-    return n.toString();
+  // Initialize once DOM is accessible
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSpotiFiak);
+  } else {
+    initSpotiFiak();
   }
 
-  console.log('[SpotiFiak] Overlay UI loaded');
+  // Also retry periodically in case of client-side navigation or body re-mount
+  setInterval(() => {
+    if (!document.getElementById('spotifiak-fab')) {
+      initSpotiFiak();
+    }
+  }, 2000);
 })();

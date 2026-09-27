@@ -1,18 +1,20 @@
 <div align="center">
 
-# 🎵 SpotiFiak
+<img src="docs/assets/logo.png" width="130" height="130" style="border-radius: 30px; box-shadow: 0 10px 32px rgba(255,110,110,0.4);" alt="Logo SpotiFiak Pêche" />
+
+# 🍑 SpotiFiak
 
 ### *Spicetify pour Android — Personnalisez Spotify Web Player sur Mobile*
 
-[![GitHub Release](https://img.shields.io/github/v/release/SatanMerde/SpotiFiak?color=1DB954&style=for-the-badge&logo=github)](https://github.com/SatanMerde/SpotiFiak/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/SatanMerde/SpotiFiak?color=FF6E6E&style=for-the-badge&logo=github)](https://github.com/SatanMerde/SpotiFiak/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/SatanMerde/SpotiFiak/build-apk.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/SatanMerde/SpotiFiak/actions)
 [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SatanMerde/SpotiFiak/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 <br/>
 
-<a href="https://github.com/SatanMerde/SpotiFiak/releases/download/v1.0.0/SpotiFiak.apk">
-  <img src="https://img.shields.io/badge/📥_TÉLÉCHARGER_L'APK-SpotiFiak_v1.0.0-1DB954?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Télécharger SpotiFiak APK" />
+<a href="https://github.com/SatanMerde/SpotiFiak/releases/download/v1.1.0/SpotiFiak.apk">
+  <img src="https://img.shields.io/badge/📥_TÉLÉCHARGER_L'APK-SpotiFiak_v1.1.0-FF6E6E?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Télécharger SpotiFiak APK" />
 </a>
 
 <br/><br/>
@@ -86,16 +88,17 @@ graph TD
 
 ## 📦 Addons Inclus (Disponibles Hors-Ligne)
 
-SpotiFiak embarque nativement 10 addons pré-installés dans l'APK :
+SpotiFiak embarque nativement une sélection d'addons pré-installés dans l'APK :
 
 | Type | Nom | Auteur | Compatibilité Spicetify PC | Description |
 | :---: | :--- | :---: | :---: | :--- |
+| 🍑 | **Peach Sunset** | SpotiFiak Team | Native CSS | Thème signature SpotiFiak aux accents pêche & corail lumineux |
+| 🖤 | **AMOLED Pure Black** | OledDev | Native CSS | Noir 100% pur pour économiser la batterie sur écran OLED |
 | 🎨 | **Midnight Wave** | SpotiFiak Team | Native CSS | Thème sombre avec accents néon bleus profonds |
 | 🎨 | **Aurora Borealis** | NightCoder | Native CSS | Dégradés dynamiques violets et verts aurore |
 | 🎨 | **Retro Synthwave** | VaporDev | Native CSS | Esthétique cyberpunk rétro 80s |
 | 🧩 | **Lyrics+** | LyricsMaster | 🔗 Compatible | Paroles en direct synchronisées avec le morceau |
 | 🧩 | **Audio Visualizer** | WaveForm | 🔗 Compatible | Barres de visualisation réactives au son |
-| 🧩 | **Smart Ad Skipper** | FreeFlow | 🔗 Compatible | Détecte et passe les publicités |
 | 🧩 | **Sleep Timer** | DreamDev | Autonome | Minuteur de sommeil avec extinction en douceur |
 | 🧩 | **Equalizer Pro** | AudioTech | Web Audio | Égaliseur graphique multibandes |
 | 📱 | **Stats Dashboard** | DataViz | 🔗 Compatible | Statistiques d'écoute et tendances |

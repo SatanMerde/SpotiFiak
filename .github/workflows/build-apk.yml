@@ -60,19 +60,23 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.0
-          name: "SpotiFiak v1.0.0 — Android APK"
+          tag_name: v1.1.0
+          name: "SpotiFiak v1.1.0 — Spicetify Mobile APK 🍑"
           body: |
-            ## 🎵 SpotiFiak Mobile APK (Style SpotiDuck)
+            ## 🍑 SpotiFiak Mobile APK (Spicetify pour Android)
 
-            Téléchargez **`SpotiFiak.apk`** ci-dessous et installez-le directement sur votre téléphone Android !
+            Téléchargez **`SpotiFiak.apk`** ci-dessous et installez-le directement sur votre smartphone Android !
 
-            ### ✨ Fonctionnalités :
-            - 🎧 **Spotify Web Player** intégré avec affichage optimisé mobile
-            - 🏪 **Marketplace** avec 10 addons pré-installés (thèmes, extensions, apps)
-            - 🔗 **Compatibilité Spicetify PC** (émulation de l'API Spicetify)
-            - ⏯️ **Contrôles écran de verrouillage** (MediaSession) & lecture en arrière-plan sans coupure
-            - 🚫 **Ad Skipper** et **Lyrics+** inclus
+            ### ✨ Nouveautés de la version 1.1.0 :
+            - 🍑 **Nouveau Logo Pêche Officiel** : icône moderne et identifiable avec ondes musicales et feuille néon
+            - 📱 **Base WebView façon SpotiDuck** : container plein écran fluide, maintien de l'audio en arrière-plan (`PlaybackService`), et intégration `MediaSession` sur l'écran de verrouillage
+            - 🎨 **Moteur Spicetify Mobile** :
+              - Thème signature exclusif **Peach Sunset 🍑**
+              - Thème **AMOLED Pure Black** pour économie de batterie OLED
+              - Thèmes **Midnight Wave**, **Aurora Borealis**, **Retro Synthwave**
+            - 🧭 **Barre de Navigation Mobile Tactile** : Accueil, Recherche, Bibliothèque en tiroir glissant, et accès instantané à Spicetify
+            - 🍑 **Bouton Flottant Pêche (FAB)** : toujours accessible pour basculer les thèmes et lancer les extensions (Lyrics+, Visualizer, Sleep Timer, Equalizer)
+            - ✏️ **Éditeur CSS Live** : injectez vos propres règles CSS Spicetify personnalisées en temps réel
           files: release-files/SpotiFiak.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

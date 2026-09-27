@@ -4,24 +4,59 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Spotify Green Circle using standard cubic beziers -->
+
+    <!-- Dark Glowing Halo Behind Peach -->
+    <path
+        android:fillColor="#33FF6E6E"
+        android:pathData="M54,18 C30,18 18,36 18,56 C18,76 34,92 54,92 C74,92 90,76 90,56 C90,36 78,18 54,18 Z" />
+
+    <!-- Green Leaf at Top -->
     <path
         android:fillColor="#1DB954"
-        android:pathData="M54,16C33.01,16 16,33.01 16,54C16,74.99 33.01,92 54,92C74.99,92 92,74.99 92,54C92,33.01 74.99,16 54,16Z" />
-    <!-- White Sound Waves -->
+        android:pathData="M54,34 C58,22 72,18 78,22 C78,28 72,36 58,38 C56,36 55,35 54,34 Z" />
+    <!-- Leaf Vein -->
     <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="4"
+        android:strokeColor="#15853B"
+        android:strokeWidth="1.5"
         android:strokeLineCap="round"
-        android:pathData="M38,44C46,40 62,40 70,44" />
+        android:pathData="M56,36 C64,30 72,24 76,22" />
+
+    <!-- Peach Body - Left Lobe -->
+    <path
+        android:fillColor="#FF6E6E"
+        android:pathData="M54,36 C42,36 26,44 26,60 C26,76 42,88 54,88 C54,72 54,54 54,36 Z" />
+
+    <!-- Peach Body - Right Lobe (Warm Peach Gradient Effect via coral fill) -->
+    <path
+        android:fillColor="#FFA07A"
+        android:pathData="M54,36 C66,36 82,44 82,60 C82,76 66,88 54,88 C54,72 54,54 54,36 Z" />
+
+    <!-- Subtle Peach Center Cleft Shadow -->
+    <path
+        android:strokeColor="#E0485A"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M54,36 C55,48 55,62 54,78" />
+
+    <!-- Spotify-style Sound Wave 1 (engraved on peach) -->
     <path
         android:strokeColor="#FFFFFF"
         android:strokeWidth="3.5"
         android:strokeLineCap="round"
-        android:pathData="M40,53C47,50 61,50 68,53" />
+        android:pathData="M35,58 C42,54 50,54 58,58 C64,61 68,60 72,57" />
+
+    <!-- Spotify-style Sound Wave 2 -->
     <path
         android:strokeColor="#FFFFFF"
         android:strokeWidth="3"
         android:strokeLineCap="round"
-        android:pathData="M43,62C49,60 59,60 65,62" />
+        android:pathData="M38,66 C44,63 50,63 56,66 C61,68 65,68 69,65" />
+
+    <!-- Spotify-style Sound Wave 3 -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M42,74 C46,72 50,72 54,74 C58,75 62,75 65,73" />
+
 </vector>
