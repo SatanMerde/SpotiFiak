@@ -34,6 +34,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.view.Gravity;
+import android.webkit.PermissionRequest;
+import android.media.AudioManager;
+import android.content.Context;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,7 +58,7 @@ public class MainActivity extends Activity {
     // Desktop User Agent — forces desktop mode like SpotiDuck to unlock full player
     private static final String DESKTOP_USER_AGENT = 
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+        "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -145,10 +148,12 @@ public class MainActivity extends Activity {
         settings.setUseWideViewPort(false);
         settings.setTextZoom(100);
 
-        // Mixed content (HTTP resources in HTTPS page)
+        // Mixed content (HTTP resources in HTTPS page) & media access
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         }
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
 
         // Enable cookies for Spotify login
         CookieManager cookieManager = CookieManager.getInstance();
@@ -184,14 +189,22 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
                 
-                // Keep Spotify URLs in WebView
-                if (url.contains("spotify.com") || url.contains("accounts.spotify.com")) {
+                // Keep Spotify URLs and auth identity providers (Google, Facebook, Apple, Spotify) in WebView
+                if (url.contains("spotify.com") || 
+                    url.contains("spotify.link") ||
+                    url.contains("accounts.google.com") ||
+                    url.contains("facebook.com") ||
+                    url.contains("appleid.apple.com")) {
                     return false;
                 }
                 
                 // Open external links in browser
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                startActivity(intent);
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    android.util.Log.e("SpotiFiak", "Failed to open external URL: " + url, e);
+                }
                 return true;
             }
         });
@@ -204,6 +217,14 @@ public class MainActivity extends Activity {
                 if (newProgress >= 50) {
                     injectSpotiFiak(view);
                 }
+            }
+
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(() -> {
+                    // Crucial: Automatically grant Protected Media ID (Widevine DRM) so Spotify music playback works!
+                    request.grant(request.getResources());
+                });
             }
 
             @Override
@@ -548,9 +569,21 @@ public class MainActivity extends Activity {
         return super.onKeyDown(keyCode, event);
     }
 
+    private void requestAudioFocus() {
+        try {
+            AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager != null) {
+                audioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("SpotiFiak", "Error requesting audio focus", e);
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
+        requestAudioFocus();
         webView.onResume();
     }
 

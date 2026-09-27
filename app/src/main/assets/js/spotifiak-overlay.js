@@ -198,12 +198,20 @@
     }
 
     function updateRouteState() {
-      const isSearch = window.location.pathname.startsWith('/search');
+      const path = window.location.pathname;
+      const isSearch = path.startsWith('/search');
+      const isLib = path.startsWith('/collection');
+
       if (isSearch) {
         if (!document.body.classList.contains('sf-page-search')) {
           document.body.classList.add('sf-page-search');
         }
         setActiveNav('sf-nav-search');
+      } else if (isLib) {
+        if (document.body.classList.contains('sf-page-search')) {
+          document.body.classList.remove('sf-page-search');
+        }
+        setActiveNav('sf-nav-library');
       } else {
         if (document.body.classList.contains('sf-page-search')) {
           document.body.classList.remove('sf-page-search');
@@ -981,8 +989,81 @@
       }
     }
 
+    // ── Dedicated Mobile Search Bar ──
+    function injectMobileSearchBar() {
+      if (document.getElementById('sf-mobile-search-bar')) return;
+      const bar = document.createElement('div');
+      bar.id = 'sf-mobile-search-bar';
+      bar.innerHTML = `
+        <div class="sf-search-input-wrapper">
+          <span class="sf-search-icon-prefix">🔍</span>
+          <input type="text" id="sf-search-query-input" placeholder="Que souhaitez-vous écouter ?" autocomplete="off" />
+          <button id="sf-search-clear-btn" class="sf-search-clear-btn" style="display:none;">✕</button>
+        </div>
+      `;
+      document.body.appendChild(bar);
+
+      const input = bar.querySelector('#sf-search-query-input');
+      const clearBtn = bar.querySelector('#sf-search-clear-btn');
+
+      function syncToSpotify(query) {
+        // Try finding Spotify's internal React search input
+        const spInput = document.querySelector('input[data-testid="search-input"]') || 
+                        document.querySelector('#global-nav-bar input') ||
+                        document.querySelector('form[role="search"] input');
+        if (spInput) {
+          try {
+            const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+            if (nativeSetter) {
+              nativeSetter.call(spInput, query);
+            } else {
+              spInput.value = query;
+            }
+            spInput.dispatchEvent(new Event('input', { bubbles: true }));
+            spInput.dispatchEvent(new Event('change', { bubbles: true }));
+            spInput.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+          } catch(e) {}
+        }
+      }
+
+      input.addEventListener('input', (e) => {
+        const val = e.target.value;
+        clearBtn.style.display = val ? 'flex' : 'none';
+        syncToSpotify(val);
+      });
+
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        clearBtn.style.display = 'none';
+        syncToSpotify('');
+        input.focus();
+      });
+    }
+
+    function navigateToSearch(callback) {
+      document.body.classList.remove('sf-show-library');
+      document.body.classList.add('sf-page-search');
+      setActiveNav('sf-nav-search');
+
+      const searchBtn = document.querySelector('a[href="/search"]') || document.querySelector('[data-testid="search-button"]');
+      if (searchBtn) {
+        searchBtn.click();
+      } else if (!window.location.pathname.startsWith('/search')) {
+        window.history.pushState(null, '', '/search');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+
+      setTimeout(() => {
+        const barInput = document.getElementById('sf-search-query-input');
+        if (barInput) barInput.focus();
+        if (callback) callback();
+      }, 300);
+    }
+
     function injectBottomNav() {
       if (document.getElementById('sf-bottom-nav')) return;
+
+      injectMobileSearchBar();
 
       const nav = document.createElement('nav');
       nav.id = 'sf-bottom-nav';
@@ -996,7 +1077,7 @@
           Recherche
         </button>
         <button class="sf-nav-item" id="sf-nav-library">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1.5-.866l-5 3zM8.5 2.134A1 1 0 0 0 7 3v18a1 1 0 0 0 1.5.866l5-3A1 1 0 0 0 14 18V3a1 1 0 0 0-1.5-.866l-4 2.4z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 2.134a1 1 0 0 1 1 0l6 3.464a1 1 0 0 1 .5.866V21a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1V3a1 1 0 0 1 .5-.866zM16 4.732V20h4V7.041l-4-2.309zM3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zm6 0a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1z"/></svg>
           Bibliothèque
         </button>
         <button class="sf-nav-item sf-nav-item-peach" id="sf-nav-spicetify">
@@ -1014,33 +1095,58 @@
         document.body.classList.remove('sf-page-search');
         const homeBtn = document.querySelector('a[href="/"]') || document.querySelector('[data-testid="home-button"]');
         if (homeBtn) homeBtn.click();
-        else if (window.location.pathname !== '/') window.location.href = 'https://open.spotify.com/';
+        else if (window.location.pathname !== '/') {
+          window.history.pushState(null, '', '/');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
       });
 
       document.getElementById('sf-nav-search').addEventListener('click', (e) => {
         e.preventDefault();
-        setActiveNav('sf-nav-search');
-        document.body.classList.remove('sf-show-library');
-        document.body.classList.add('sf-page-search');
-        const searchBtn = document.querySelector('a[href="/search"]') || document.querySelector('[data-testid="search-button"]');
-        if (searchBtn) searchBtn.click();
-        else if (!window.location.pathname.startsWith('/search')) window.location.href = 'https://open.spotify.com/search';
-        setTimeout(() => {
-          const input = document.querySelector('#global-nav-bar input[data-testid="search-input"]') || document.querySelector('input[data-testid="search-input"]');
-          if (input) input.focus();
-        }, 300);
+        navigateToSearch();
       });
 
       document.getElementById('sf-nav-library').addEventListener('click', (e) => {
         e.preventDefault();
         setActiveNav('sf-nav-library');
+        document.body.classList.remove('sf-page-search');
         document.body.classList.toggle('sf-show-library');
+        const libLink = document.querySelector('a[href="/collection"]') || 
+                        document.querySelector('a[href="/collection/playlists"]') ||
+                        document.querySelector('[data-testid="your-library"] a');
+        if (libLink && !document.body.classList.contains('sf-show-library')) {
+          libLink.click();
+        }
       });
 
       document.getElementById('sf-nav-spicetify').addEventListener('click', (e) => {
         e.preventDefault();
         togglePanel();
       });
+
+      // Media click watcher for play buttons and unauthenticated assistance
+      document.addEventListener('click', (e) => {
+        const playTarget = e.target.closest('[data-testid="play-button"]') ||
+                           e.target.closest('.main-playButton-PlayButton') ||
+                           e.target.closest('[data-testid="control-button-playpause"]') ||
+                           e.target.closest('button[aria-label*="Lecture" i]') ||
+                           e.target.closest('button[aria-label*="Play" i]');
+
+        if (playTarget) {
+          setTimeout(() => {
+            document.querySelectorAll('audio').forEach(a => {
+              if (a.paused && a.src) a.play().catch(() => {});
+            });
+          }, 150);
+
+          const isLoggedOut = !document.querySelector('[data-testid="user-widget-link"]') && 
+                              (document.querySelector('[data-testid="login-button"]') || document.querySelector('button[data-testid="signup-button"]'));
+          if (isLoggedOut && !sessionStorage.getItem('sf_login_hint')) {
+            showInAppToast('Connexion Spotify', 'Connectez-vous avec le bouton "Log in" (en haut à droite) pour débloquer l\'écoute complète et vos playlists !');
+            sessionStorage.setItem('sf_login_hint', 'true');
+          }
+        }
+      }, true);
     }
 
     function setActiveNav(id) {
