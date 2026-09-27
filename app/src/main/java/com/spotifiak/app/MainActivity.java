@@ -84,30 +84,6 @@ public class MainActivity extends Activity {
             FrameLayout.LayoutParams.MATCH_PARENT
         ));
 
-        // Native Peach Floating Button (🍑 Spicetify Mobile)
-        ImageButton peachFab = new ImageButton(this);
-        peachFab.setImageResource(R.drawable.ic_launcher_foreground);
-        peachFab.setBackgroundResource(R.drawable.btn_peach_circle);
-        
-        float density = getResources().getDisplayMetrics().density;
-        int fabSize = (int) (54 * density);
-        int margin = (int) (14 * density);
-        int bottomMargin = (int) (68 * density);
-        
-        FrameLayout.LayoutParams fabParams = new FrameLayout.LayoutParams(fabSize, fabSize);
-        fabParams.gravity = Gravity.BOTTOM | Gravity.END;
-        fabParams.setMargins(0, 0, margin, bottomMargin);
-        peachFab.setLayoutParams(fabParams);
-        peachFab.setPadding((int)(6 * density), (int)(6 * density), (int)(6 * density), (int)(6 * density));
-        peachFab.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        peachFab.setContentDescription("Spicetify Mobile");
-        
-        peachFab.setOnClickListener(v -> {
-            webView.evaluateJavascript("if (window.toggleSpotiFiakPanel) window.toggleSpotiFiakPanel();", null);
-        });
-
-        rootLayout.addView(peachFab);
-
         setContentView(rootLayout);
 
         // Setup media session for lock screen controls

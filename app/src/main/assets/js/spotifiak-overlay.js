@@ -7,7 +7,7 @@
   'use strict';
 
   function initSpotiFiak() {
-    if (document.getElementById('spotifiak-fab')) return;
+    if (document.getElementById('sf-bottom-nav')) return;
     if (!document.body) {
       setTimeout(initSpotiFiak, 200);
       return;
@@ -51,60 +51,10 @@
       'theme-peach-sunset': { enabled: true, date: Date.now() }
     });
 
-    // ── 1. Floating Action Button with Peach Logo (🍑) ──
-    const fab = document.createElement('button');
-    fab.id = 'spotifiak-fab';
-    fab.title = 'Ouvrir Spicetify Mobile';
-    fab.innerHTML = `
-      <div style="position:relative; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
-        <svg viewBox="0 0 108 108" width="36" height="36" style="filter: drop-shadow(0 2px 8px rgba(255,110,110,0.6));">
-          <!-- Leaf -->
-          <path d="M54,34 C58,22 72,18 78,22 C78,28 72,36 58,38 Z" fill="#1DB954"/>
-          <!-- Peach Lobe Left -->
-          <path d="M54,36 C42,36 26,44 26,60 C26,76 42,88 54,88 C54,72 54,54 54,36 Z" fill="#FF6E6E"/>
-          <!-- Peach Lobe Right -->
-          <path d="M54,36 C66,36 82,44 82,60 C82,76 66,88 54,88 C54,72 54,54 54,36 Z" fill="#FFA07A"/>
-          <!-- Cleft -->
-          <path d="M54,36 C55,48 55,62 54,78" stroke="#E0485A" stroke-width="2" stroke-linecap="round"/>
-          <!-- Sound waves -->
-          <path d="M35,58 C42,54 50,54 58,58 C64,61 68,60 72,57" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-          <path d="M38,66 C44,63 50,63 56,66 C61,68 65,68 69,65" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none"/>
-        </svg>
-      </div>
-    `;
-    fab.style.cssText = `
-      position: fixed; bottom: 72px; right: 16px; z-index: 99999;
-      width: 54px; height: 54px; border-radius: 50%;
-      background: rgba(14, 15, 23, 0.94); backdrop-filter: blur(14px);
-      border: 2px solid rgba(255, 110, 110, 0.5);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 110, 110, 0.3);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); padding: 0; outline: none;
-    `;
-    fab.addEventListener('click', togglePanel);
-    document.body.appendChild(fab);
-
-    // Draggable FAB
-    let isDragging = false, startY = 0, startBottom = 72;
-    fab.addEventListener('touchstart', (e) => {
-      isDragging = false;
-      startY = e.touches[0].clientY;
-      startBottom = parseInt(fab.style.bottom) || 72;
-    }, { passive: true });
-    fab.addEventListener('touchmove', (e) => {
-      const dy = startY - e.touches[0].clientY;
-      if (Math.abs(dy) > 6) isDragging = true;
-      const newBottom = Math.max(65, Math.min(window.innerHeight - 80, startBottom + dy));
-      fab.style.bottom = newBottom + 'px';
-    }, { passive: true });
-    fab.addEventListener('touchend', (e) => {
-      if (isDragging) e.preventDefault();
-    });
-
-    // ── 2. Mobile Bottom Navigation Bar ──
+    // ── 1. Mobile Bottom Navigation Bar ──
     injectBottomNav();
 
-    // ── 3. Spicetify Mobile Panel Bottom Sheet ──
+    // ── 2. Spicetify Mobile Panel Bottom Sheet ──
     const panel = document.createElement('div');
     panel.id = 'spotifiak-panel';
     panel.style.cssText = `
@@ -121,13 +71,71 @@
     let addonRegistry = getBundledRegistry();
 
     function togglePanel() {
-      if (isDragging) return;
       panelOpen = !panelOpen;
       panel.style.top = panelOpen ? '0' : '100%';
-      fab.style.transform = panelOpen ? 'rotate(90deg)' : 'rotate(0)';
-      fab.style.borderColor = panelOpen ? 'rgba(255, 110, 110, 0.9)' : 'rgba(255, 110, 110, 0.5)';
       if (panelOpen) renderPanel();
     }
+
+    // ── 3. Spotify Desktop Panel Watcher (collapses desktop sidebar on mobile) ──
+    function watchPanels() {
+      // Find react-resizable-panels used by Spotify Desktop
+      const panelGroup = document.querySelector('[data-panel-group]') || document.querySelector('[data-panel-group-id]');
+      if (panelGroup) {
+        const panels = panelGroup.querySelectorAll(':scope > [data-panel]');
+        if (panels.length >= 2) {
+          if (!panels[0].classList.contains('sf-sidebar-panel')) {
+            panels[0].classList.add('sf-sidebar-panel');
+          }
+          if (!panels[1].classList.contains('sf-main-panel')) {
+            panels[1].classList.add('sf-main-panel');
+          }
+        }
+      }
+
+      // Also mark library by content/aria
+      const libContainer = document.querySelector('div.main-yourLibraryX-header') ||
+                           document.querySelector('[data-testid="your-library"]') ||
+                           document.querySelector('div[aria-label*="bibliothèque" i]') ||
+                           document.querySelector('div[aria-label*="library" i]');
+      if (libContainer) {
+        const parentPanel = libContainer.closest('[data-panel]') || libContainer.closest('aside') || libContainer.parentElement;
+        if (parentPanel && !parentPanel.classList.contains('sf-sidebar-panel')) {
+          parentPanel.classList.add('sf-sidebar-panel');
+        }
+      }
+
+      // Fix "Se connecter" button in top bar to prevent 2-line wrap
+      const loginBtns = document.querySelectorAll('button[data-testid="login-button"], a[data-testid="login-button"], header button:not([aria-label])');
+      loginBtns.forEach(btn => {
+        if (btn.style.whiteSpace !== 'nowrap') {
+          btn.style.whiteSpace = 'nowrap';
+          btn.style.fontSize = '12px';
+          btn.style.padding = '4px 12px';
+          btn.style.height = '30px';
+          btn.style.minHeight = '30px';
+          btn.style.lineHeight = '1';
+        }
+      });
+    }
+
+    // Run watcher immediately and on every DOM mutation
+    watchPanels();
+    const panelObserver = new MutationObserver(watchPanels);
+    panelObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Auto-close library drawer when tapping outside or selecting a song/playlist
+    document.addEventListener('click', (e) => {
+      if (document.body.classList.contains('sf-show-library')) {
+        const isInsideLib = e.target.closest('.sf-sidebar-panel') || e.target.closest('[data-testid="your-library"]');
+        const isNavToggle = e.target.closest('#sf-nav-library');
+        if (!isInsideLib && !isNavToggle) {
+          document.body.classList.remove('sf-show-library');
+        }
+        if (isInsideLib && (e.target.closest('a[href*="/playlist/"]') || e.target.closest('a[href*="/album/"]') || e.target.closest('a[href*="/track/"]'))) {
+          document.body.classList.remove('sf-show-library');
+        }
+      }
+    });
 
     // Expose toggle to global for native Android button call
     window.toggleSpotiFiakPanel = togglePanel;
@@ -496,7 +504,7 @@
 
   // Also retry periodically in case of client-side navigation or body re-mount
   setInterval(() => {
-    if (!document.getElementById('spotifiak-fab')) {
+    if (!document.getElementById('sf-bottom-nav')) {
       initSpotiFiak();
     }
   }, 2000);
